@@ -1,9 +1,13 @@
 // Atlante del Pacifico — data model (Phase 2 commerce foundation).
 //
 // Mirrors the proven prod booking model (booking lifecycle, capacity,
-// Stripe idempotency, QR boarding codes, commission attribution) but is an
+// payment idempotency, QR boarding codes, commission attribution) but is an
 // independent schema. Nothing here is imported by the Phase 1 marketing site
-// yet — it is wired up when the booking/checkout endpoints are built.
+// yet — it is wired up when the booking endpoints are built.
+//
+// Payment: NO online gateway (no Stripe). Bookings are coordinated over
+// WhatsApp and marked paid manually (cash / bank transfer). A gateway can be
+// added later by extending PaymentMethod + a provider ref, without reshaping.
 //
 // Provider: Postgres (Neon or Supabase work well on Vercel).
 // After setting DATABASE_URL:  npx prisma migrate dev --name init
@@ -34,16 +38,16 @@ enum PaymentStatus {
 }
 
 enum BookingFlow {
-  stripe_checkout
+  whatsapp_request
   manual_payment
   charter_request
 }
 
 enum PaymentMethod {
-  stripe
   cash
-  refund
+  transfer
   manual
+  refund
 }
 
 enum SlotStatus {
@@ -89,7 +93,7 @@ model Customer {
 model Booking {
   id                 String        @id @default(uuid())
   tourSlug           String
-  bookingFlow        BookingFlow   @default(stripe_checkout)
+  bookingFlow        BookingFlow   @default(whatsapp_request)
   status             BookingStatus @default(pending)
   paymentStatus      PaymentStatus @default(unpaid)
 
@@ -110,8 +114,8 @@ model Booking {
   confirmationToken  String        @unique
   boardingCode       String?       @unique
 
-  // Stripe / idempotency
-  stripeSessionId    String?
+  // Idempotency + optional external payment reference (unused without a gateway)
+  paymentRef         String?
   idempotencyKey     String?       @unique
 
   // Contact + waiver
@@ -145,26 +149,20 @@ model Booking {
   @@index([bookingDate])
 }
 
-/// One row per successful capture; stripePaymentId is the universal
-/// idempotency key (prefix per provider).
+/// One row per recorded payment (cash / bank transfer / manual mark-paid).
+/// providerRef stays unique so a future gateway can use it as an idempotency key.
 model Payment {
-  id              String        @id @default(uuid())
-  bookingId       String
-  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  amount          Decimal       @db.Decimal(10, 2)
-  method          PaymentMethod @default(stripe)
-  stripePaymentId String?       @unique
-  refundAmount    Decimal?      @db.Decimal(10, 2)
-  stripeRefundId  String?
-  notes           String?
-  createdAt       DateTime      @default(now())
-}
-
-/// Stripe idempotency ledger — record AFTER fulfillment so retries are safe.
-model WebhookEvent {
-  id        String   @id @default(uuid())
-  eventId   String   @unique
-  createdAt DateTime @default(now())
+  id           String        @id @default(uuid())
+  bookingId    String
+  booking      Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount       Decimal       @db.Decimal(10, 2)
+  method       PaymentMethod @default(manual)
+  providerRef  String?       @unique
+  refundAmount Decimal?      @db.Decimal(10, 2)
+  refundRef    String?
+  notes        String?
+  collectedBy  String?
+  createdAt    DateTime      @default(now())
 }
 
 /// Email capture / newsletter (feeds discount-code + campaign sends).

@@ -12,7 +12,7 @@ import { whatsappUrl } from "@/config/site";
  * Group-size selector + live pricing + deposit.
  * perPerson tours multiply by guests; perBoat charters add an extra-guest
  * surcharge past the base capacity. The CTA hands off to WhatsApp with the
- * quote details until Phase 2 wires Stripe checkout.
+ * quote details — the sale is closed over WhatsApp (no online checkout).
  */
 export default function PriceCalculator({ tour }: { tour: Tour }) {
   const { locale } = useLocale();

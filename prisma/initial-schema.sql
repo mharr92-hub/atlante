@@ -8,10 +8,10 @@ CREATE TYPE "BookingStatus" AS ENUM ('pending', 'confirmed', 'cancelled', 'expir
 CREATE TYPE "PaymentStatus" AS ENUM ('unpaid', 'paid', 'refunded');
 
 -- CreateEnum
-CREATE TYPE "BookingFlow" AS ENUM ('stripe_checkout', 'manual_payment', 'charter_request');
+CREATE TYPE "BookingFlow" AS ENUM ('whatsapp_request', 'manual_payment', 'charter_request');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('stripe', 'cash', 'refund', 'manual');
+CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'transfer', 'manual', 'refund');
 
 -- CreateEnum
 CREATE TYPE "SlotStatus" AS ENUM ('available', 'full', 'blocked', 'maintenance');
@@ -48,7 +48,7 @@ CREATE TABLE "Customer" (
 CREATE TABLE "Booking" (
     "id" TEXT NOT NULL,
     "tourSlug" TEXT NOT NULL,
-    "bookingFlow" "BookingFlow" NOT NULL DEFAULT 'stripe_checkout',
+    "bookingFlow" "BookingFlow" NOT NULL DEFAULT 'whatsapp_request',
     "status" "BookingStatus" NOT NULL DEFAULT 'pending',
     "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'unpaid',
     "bookingDate" DATE NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE "Booking" (
     "balancePaid" BOOLEAN NOT NULL DEFAULT false,
     "confirmationToken" TEXT NOT NULL,
     "boardingCode" TEXT,
-    "stripeSessionId" TEXT,
+    "paymentRef" TEXT,
     "idempotencyKey" TEXT,
     "customerName" TEXT NOT NULL,
     "customerEmail" TEXT NOT NULL,
@@ -91,23 +91,15 @@ CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
-    "method" "PaymentMethod" NOT NULL DEFAULT 'stripe',
-    "stripePaymentId" TEXT,
+    "method" "PaymentMethod" NOT NULL DEFAULT 'manual',
+    "providerRef" TEXT,
     "refundAmount" DECIMAL(10,2),
-    "stripeRefundId" TEXT,
+    "refundRef" TEXT,
     "notes" TEXT,
+    "collectedBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "WebhookEvent" (
-    "id" TEXT NOT NULL,
-    "eventId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "WebhookEvent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -202,10 +194,7 @@ CREATE INDEX "Booking_status_paymentStatus_idx" ON "Booking"("status", "paymentS
 CREATE INDEX "Booking_bookingDate_idx" ON "Booking"("bookingDate");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Payment_stripePaymentId_key" ON "Payment"("stripePaymentId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "WebhookEvent_eventId_key" ON "WebhookEvent"("eventId");
+CREATE UNIQUE INDEX "Payment_providerRef_key" ON "Payment"("providerRef");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Lead_email_key" ON "Lead"("email");

@@ -53,20 +53,20 @@ auto-detect · SEO + Open Graph per page · sitemap/robots · email-capture + ex
 popups · floating WhatsApp + pre-filled messages · GA4/Meta Pixel loaders (inert until IDs set).
 
 ### To wire (Phase 2 — needs your accounts, schema is ready)
-Stripe checkout + deposits + "pay later" · real availability calendar · one-page checkout ·
-admin dashboard (block dates, view revenue) · QR ticket emails · automated email sequences
-(Resend) · abandoned-booking recovery · SMS/WhatsApp reminders (Twilio) · digital waivers ·
-coupon redemption (schema in place; client codes today) · gift cards · referral/affiliate
-portal · loyalty · auto-collected post-trip reviews · weather rebooking flow · Google
-Calendar sync · checkout upsells.
+No online payment gateway — bookings are closed over WhatsApp and marked paid
+manually (cash / bank transfer). Remaining: real availability calendar · admin
+dashboard (create/block dates, mark paid, view revenue) · booking request +
+confirmation emails · QR boarding tickets · automated email sequences (Resend) ·
+SMS/WhatsApp reminders (Twilio) · digital waivers · coupon redemption (schema in
+place; client codes today) · gift cards · referral/affiliate portal · loyalty ·
+auto-collected post-trip reviews · weather rebooking flow · Google Calendar sync.
 
 ## Phase 2 setup (when ready)
 
-1. Create a Postgres DB (Neon or Supabase) → set `DATABASE_URL`.
-2. `npx prisma migrate dev --name init`
-3. Stripe account → set `STRIPE_*` keys, add the webhook endpoint.
-4. Resend (email) and Twilio (SMS/WhatsApp) → set their keys.
-5. Set the same vars in Vercel → Project → Settings → Environment Variables.
+1. Create a Postgres DB (Neon or Supabase) → set `DATABASE_URL` + `DIRECT_URL`.
+2. `npx prisma migrate dev --name init` then `npm run db:seed`.
+3. Resend (email) and Twilio (SMS/WhatsApp) → set their keys.
+4. Set the same vars in Vercel → Project → Settings → Environment Variables.
 
 ## Deploy (Vercel)
 
