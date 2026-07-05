@@ -1,29 +1,36 @@
-# Atlante del Pacifico Webapp
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Webapp limpia y aislada para Atlante del Pacifico.
+## Getting Started
 
-Esta carpeta no depende de ningun checkout anterior, no contiene panel operativo
-heredado ni flujos comerciales de otra marca. Es la base separada para la empresa nueva.
+First, run the development server:
 
-## Abrir localmente
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-Abrir `index.html` directamente en el navegador.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Contenido principal
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-- Tours y experiencias: opciones curadas como atardecer, Taboga y Las Perlas.
-- Destinos: rutas principales desde Ciudad de Panama.
-- Charters privados: renta total de yate para atardecer, Taboga o Las Perlas.
-- Contacto: todos los botones preparan un mensaje por WhatsApp.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Estructura
+## Learn More
 
-- `index.html`: experiencia publica principal.
-- `styles.css`: identidad visual y responsive.
-- `app.js`: filtros, precios visibles y mensajes WhatsApp.
-- `assets/`: imagenes propias del proyecto.
+To learn more about Next.js, take a look at the following resources:
 
-## Nota
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Los tours pueden canalizarse con operadores aliados como Pacific Experience. La pagina
-esta pensada para el cliente final y no expone herramientas comerciales internas.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
