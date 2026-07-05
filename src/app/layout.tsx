@@ -4,11 +4,6 @@ import "./globals.css";
 import { site } from "@/config/site";
 import type { Locale } from "@/lib/i18n";
 import Providers from "@/components/Providers";
-import Header from "@/components/site/Header";
-import Footer from "@/components/site/Footer";
-import WhatsAppFloat from "@/components/site/WhatsAppFloat";
-import LeadPopups from "@/components/marketing/LeadPopups";
-import Analytics from "@/components/marketing/Analytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -55,14 +50,7 @@ export default async function RootLayout({
   return (
     <html lang={initialLocale} className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <Providers initialLocale={initialLocale}>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <WhatsAppFloat />
-          <LeadPopups />
-          <Analytics />
-        </Providers>
+        <Providers initialLocale={initialLocale}>{children}</Providers>
       </body>
     </html>
   );
