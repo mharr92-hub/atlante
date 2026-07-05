@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Atlante del Pacifico
 
-## Getting Started
+Independent booking & marketing web app for Atlante del Pacifico — private tours and
+yacht charters from Panama City, Taboga and Las Perlas.
 
-First, run the development server:
+Built as a **Next.js 16 (App Router, TypeScript) + Tailwind v4** full-stack app,
+deployable on **Vercel**. Booking/payment patterns reference the `catamaran-rentals-prod`
+app but this is a fully separate codebase.
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Phase 1 (the marketing site) needs **no** environment variables. Phase 2 features
+each require an account — see `.env.example`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/                 App Router pages
+    page.tsx           Home (all sections)
+    tours/[slug]/      Tour & charter detail pages (SEO + JSON-LD)
+    compare/           Side-by-side compare
+    api/lead/          Email-capture endpoint (stub -> Phase 2)
+    sitemap.ts robots.ts
+  components/
+    site/              Header, Footer, floating WhatsApp
+    sections/          Home sections (hero, tours, charters, reviews, ...)
+    tour/              TourCard, TourDetail, RouteMap, WeatherWidget, PriceCalculator, Badges, CompareTable
+    marketing/         Analytics (GA4/Meta), LeadPopups (capture + exit-intent)
+  content/             tours.ts, reviews.ts  (bilingual data)
+  lib/                 i18n, locale + currency contexts, formatting/pricing
+  config/              site.ts (brand, WhatsApp, trust)
+prisma/schema.prisma   Phase 2 data model (bookings, payments, coupons, ...)
+```
 
-## Learn More
+Bilingual **ES/EN** everywhere (locale context + cookie for SSR + browser detection).
+Multi-currency **USD/EUR/COP/MXN** with reference rates in `lib/format.ts`.
 
-To learn more about Next.js, take a look at the following resources:
+## Feature status vs. the 50-item plan
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Done (Phase 1 — no external accounts)
+Tour landing pages (gallery, itinerary, included/excluded, per-tour FAQ, difficulty
+badges) · interactive route map (OpenStreetMap) · live weather (Open-Meteo) · compare
+tours · reviews/social-proof + JSON-LD aggregate rating · trust indicators · urgency
+pills · group-size price calculator with deposit · multi-currency · bilingual ES/EN +
+auto-detect · SEO + Open Graph per page · sitemap/robots · email-capture + exit-intent
+popups · floating WhatsApp + pre-filled messages · GA4/Meta Pixel loaders (inert until IDs set).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### To wire (Phase 2 — needs your accounts, schema is ready)
+Stripe checkout + deposits + "pay later" · real availability calendar · one-page checkout ·
+admin dashboard (block dates, view revenue) · QR ticket emails · automated email sequences
+(Resend) · abandoned-booking recovery · SMS/WhatsApp reminders (Twilio) · digital waivers ·
+coupon redemption (schema in place; client codes today) · gift cards · referral/affiliate
+portal · loyalty · auto-collected post-trip reviews · weather rebooking flow · Google
+Calendar sync · checkout upsells.
 
-## Deploy on Vercel
+## Phase 2 setup (when ready)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create a Postgres DB (Neon or Supabase) → set `DATABASE_URL`.
+2. `npx prisma migrate dev --name init`
+3. Stripe account → set `STRIPE_*` keys, add the webhook endpoint.
+4. Resend (email) and Twilio (SMS/WhatsApp) → set their keys.
+5. Set the same vars in Vercel → Project → Settings → Environment Variables.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy (Vercel)
+
+Push to GitHub (`origin` is already set). In Vercel, "Import Project" from the
+`atlante` repo — it auto-detects Next.js. No config needed for Phase 1.
+
+## Notes
+
+- Only `og-atlante.jpg` and `logo.png` ship as real imagery; galleries reuse the hero
+  as a placeholder. Drop real trip photos into `public/` and update `gallery`/`heroImage`
+  in `content/tours.ts`.
+- WhatsApp number, brand and trust numbers live in `src/config/site.ts`.

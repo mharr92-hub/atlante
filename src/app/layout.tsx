@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { site } from "@/config/site";
@@ -10,12 +9,6 @@ import Footer from "@/components/site/Footer";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
 import LeadPopups from "@/components/marketing/LeadPopups";
 import Analytics from "@/components/marketing/Analytics";
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -60,7 +53,7 @@ export default async function RootLayout({
   const initialLocale: Locale = cookieLocale === "en" ? "en" : "es";
 
   return (
-    <html lang={initialLocale} className={`${inter.variable} h-full antialiased`}>
+    <html lang={initialLocale} className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <Providers initialLocale={initialLocale}>
           <Header />

@@ -1,0 +1,225 @@
+// Atlante del Pacifico — data model (Phase 2 commerce foundation).
+//
+// Mirrors the proven prod booking model (booking lifecycle, capacity,
+// Stripe idempotency, QR boarding codes, commission attribution) but is an
+// independent schema. Nothing here is imported by the Phase 1 marketing site
+// yet — it is wired up when the booking/checkout endpoints are built.
+//
+// Provider: Postgres (Neon or Supabase work well on Vercel).
+// After setting DATABASE_URL:  npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Supabase: pooled connection (Transaction pooler, port 6543) for the
+  // runtime client on serverless; direct connection (port 5432) for migrations.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  expired
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+  refunded
+}
+
+enum BookingFlow {
+  stripe_checkout
+  manual_payment
+  charter_request
+}
+
+enum PaymentMethod {
+  stripe
+  cash
+  refund
+  manual
+}
+
+enum SlotStatus {
+  available
+  full
+  blocked
+  maintenance
+}
+
+/// A purchasable date/time for a given tour, with remaining capacity.
+/// Capacity is decremented inside a transaction (SELECT ... FOR UPDATE) at
+/// booking time, as in prod.
+model AvailabilitySlot {
+  id                String     @id @default(uuid())
+  tourSlug          String
+  date              DateTime   @db.Date
+  timeSlot          String?
+  capacity          Int
+  capacityRemaining Int
+  priceOverride     Decimal?   @db.Decimal(10, 2)
+  status            SlotStatus @default(available)
+  archivedAt        DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  bookings          Booking[]
+
+  @@unique([tourSlug, date, timeSlot])
+  @@index([tourSlug, date])
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  createdAt DateTime  @default(now())
+  bookings  Booking[]
+
+  @@index([email])
+}
+
+/// Central booking aggregate.
+model Booking {
+  id                 String        @id @default(uuid())
+  tourSlug           String
+  bookingFlow        BookingFlow   @default(stripe_checkout)
+  status             BookingStatus @default(pending)
+  paymentStatus      PaymentStatus @default(unpaid)
+
+  bookingDate        DateTime      @db.Date
+  timeSlot           String?
+  guestCount         Int
+
+  // Snapshot of per-guest pricing so historical bookings stay immutable.
+  passengerBreakdown Json?
+  selectedAddons     Json?
+
+  totalPrice         Decimal       @db.Decimal(10, 2)
+  depositAmount      Decimal       @db.Decimal(10, 2)
+  depositPaid        Boolean       @default(false)
+  balancePaid        Boolean       @default(false)
+
+  // Public lookup + boarding
+  confirmationToken  String        @unique
+  boardingCode       String?       @unique
+
+  // Stripe / idempotency
+  stripeSessionId    String?
+  idempotencyKey     String?       @unique
+
+  // Contact + waiver
+  customerName       String
+  customerEmail      String
+  customerPhone      String?
+  hotelPickup        String?
+  dietaryNotes       String?
+  emergencyContact   String?
+  waiverSignedAt     DateTime?
+
+  // Attribution / affiliate
+  couponCode         String?
+  referralCode       String?
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+
+  customerId         String?
+  customer           Customer?         @relation(fields: [customerId], references: [id])
+  slotId             String?
+  slot               AvailabilitySlot? @relation(fields: [slotId], references: [id])
+  payments           Payment[]
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  @@index([status, paymentStatus])
+  @@index([bookingDate])
+}
+
+/// One row per successful capture; stripePaymentId is the universal
+/// idempotency key (prefix per provider).
+model Payment {
+  id              String        @id @default(uuid())
+  bookingId       String
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod @default(stripe)
+  stripePaymentId String?       @unique
+  refundAmount    Decimal?      @db.Decimal(10, 2)
+  stripeRefundId  String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+}
+
+/// Stripe idempotency ledger — record AFTER fulfillment so retries are safe.
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+}
+
+/// Email capture / newsletter (feeds discount-code + campaign sends).
+model Lead {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  source    String?
+  locale    String?
+  createdAt DateTime @default(now())
+}
+
+/// Post-trip reviews (auto-requested by email after a confirmed booking).
+model Review {
+  id         String   @id @default(uuid())
+  bookingId  String?
+  name       String
+  stars      Int
+  text       String
+  tourSlug   String?
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+/// Promo / coupon codes.
+model Coupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  percentOff     Int?
+  amountOff      Decimal?  @db.Decimal(10, 2)
+  maxRedemptions Int?
+  timesRedeemed  Int       @default(0)
+  expiresAt      DateTime?
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+}
+
+/// Gift cards / certificates.
+model GiftCard {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  initialValue  Decimal   @db.Decimal(10, 2)
+  balance       Decimal   @db.Decimal(10, 2)
+  purchaserName String?
+  recipientName String?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+}
+
+/// Partner / affiliate accounts (hotels, agencies) with commission tracking.
+model Reseller {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  referralCode     String   @unique
+  commissionPercent Decimal @db.Decimal(5, 2)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+}
