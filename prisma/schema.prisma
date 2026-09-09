@@ -1,16 +1,15 @@
-// Atlante del Pacifico — data model (Phase 2 commerce foundation).
+// Atlante del Pacifico — modelo de datos.
 //
-// Mirrors the proven prod booking model (booking lifecycle, capacity,
-// payment idempotency, QR boarding codes, commission attribution) but is an
-// independent schema. Nothing here is imported by the Phase 1 marketing site
-// yet — it is wired up when the booking endpoints are built.
+// Atlante es un broker: no cobra y no opera embarcaciones. Lo que el sitio
+// público escribe hoy es `Lead` (intención de compra), `Handoff` (token de un
+// solo uso hacia PEX) y `PexEvent` (log del webhook de confirmación).
 //
-// Payment: NO online gateway (no Stripe). Bookings are coordinated over
-// WhatsApp and marked paid manually (cash / bank transfer). A gateway can be
-// added later by extending PaymentMethod + a provider ref, without reshaping.
+// `Booking`, `Payment`, `AvailabilitySlot`, `Customer`, `Coupon`, `GiftCard`,
+// `Review` y `Reseller` vienen del modelo anterior de reservas propias: se
+// conservan para no perder datos, pero ya no los usa ninguna ruta pública.
 //
-// Provider: Postgres (Neon or Supabase work well on Vercel).
-// After setting DATABASE_URL:  npx prisma migrate dev --name init
+// Provider: Postgres (proyecto Supabase "ATLANTE").
+// Las migraciones se aplican fuera de este repo (`prisma migrate deploy`).
 
 generator client {
   provider = "prisma-client-js"
@@ -165,13 +164,16 @@ model Payment {
   createdAt    DateTime      @default(now())
 }
 
-/// Email capture / newsletter (feeds discount-code + campaign sends).
-model Lead {
+/// Email capture / newsletter (feeds campaign sends).
+/// R1 renamed it: `Lead` is now the purchase-intent model below.
+model Subscriber {
   id        String   @id @default(uuid())
   email     String   @unique
   source    String?
   locale    String?
   createdAt DateTime @default(now())
+
+  @@map("Subscriber")
 }
 
 /// Post-trip reviews (auto-requested by email after a confirmed booking).
@@ -220,4 +222,121 @@ model Reseller {
   commissionPercent Decimal @db.Decimal(5, 2)
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
+}
+
+// ============================================================================
+// R1 — broker de Pacific Experience
+//
+// El sitio público ya no crea `Booking`: crea un `Lead` (intención de compra)
+// y un `Handoff` (token de un solo uso) antes de redirigir a PEX. `PexEvent`
+// es el log idempotente del webhook de confirmación.
+// ============================================================================
+
+enum LeadStatus {
+  created
+  redirected
+  paid
+  paid_unmatched
+  lost
+  quote_requested
+  quoted
+  accepted
+}
+
+enum LeadType {
+  tour
+  party
+  ferry
+  charter_pex
+  charter_partner
+}
+
+/// Intención de compra capturada en el paso 3 del funnel, antes del handoff.
+model Lead {
+  id       String   @id @default(cuid())
+  type     LeadType
+
+  productSlug String?
+  vesselSlug  String?
+
+  serviceDate DateTime? @db.Date
+  timeSlot    String?
+  /// Cantidad por categoría de precio: { "adulto-nacional": 2, ... }
+  pax         Json?
+  paxTotal    Int?
+  /// Slugs de adicionales seleccionados.
+  addons      Json?
+
+  name  String
+  email String
+  phone String
+
+  partnerCode String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  landingPath String?
+  /// URL a PEX con la que se redirigió (para el rescate por WhatsApp).
+  destinationUrl String?
+
+  status LeadStatus @default(created)
+
+  pexBookingId     String?  @unique
+  amount           Decimal? @db.Decimal(10, 2)
+  commissionPct    Decimal? @db.Decimal(5, 2)
+  commissionAmount Decimal? @db.Decimal(10, 2)
+  notes            String?
+
+  createdAt    DateTime  @default(now())
+  redirectedAt DateTime?
+  paidAt       DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  handoffs Handoff[]
+  events   PexEvent[]
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([serviceDate])
+}
+
+/// Token de un solo uso para que PEX prellene el checkout sin PII en la URL.
+model Handoff {
+  token     String   @id
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}
+
+/// Log del webhook de PEX. `(pexBookingId, eventType)` da la idempotencia.
+model PexEvent {
+  id           String   @id @default(cuid())
+  pexBookingId String
+  eventType    String
+  payload      Json
+  signatureOk  Boolean
+  leadId       String?
+  lead         Lead?    @relation(fields: [leadId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([pexBookingId, eventType])
+  @@index([leadId])
+}
+
+/// Alta self-service de operadores de charter (marketplace, bloque 4/R2).
+model PartnerApplication {
+  id         String   @id @default(cuid())
+  name       String
+  vesselName String?
+  capacity   Int?
+  zone       String?
+  whatsapp   String
+  email      String?
+  photos     Json?
+  status     String   @default("new")
+  createdAt  DateTime @default(now())
 }
