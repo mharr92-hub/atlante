@@ -118,6 +118,11 @@ a {
 
 .nav a,
 .site-footer nav a {
+  /* El menú del header se oculta por debajo de 900 px, pero el del pie es la
+     navegación real en móvil: 44 px de alto de toque (regla 14). */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   opacity: 0.78;
   transition: opacity 160ms ease;
 }
@@ -425,6 +430,9 @@ p {
 
 .card-link {
   display: inline-flex;
+  /* 44 px de alto (regla 14): queda a la altura del botón que lleva al lado. */
+  align-items: center;
+  min-height: 44px;
   color: var(--gold);
   font-size: 12px;
   font-weight: 800;
@@ -544,6 +552,11 @@ summary {
   cursor: pointer;
   font-family: var(--font-serif);
   font-size: 22px;
+  /* La pregunta de la FAQ es el control que abre la respuesta: 44 px de alto
+     de toque (regla 14). Se hace con relleno y no con `display: flex`, que en
+     Chromium se lleva por delante el triangulito de abrir/cerrar. */
+  min-height: 44px;
+  padding: 7px 0;
 }
 
 /* ---------- Contact ---------- */
