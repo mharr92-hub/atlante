@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { pexVessels } from "@/content/catalog";
+import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
@@ -12,9 +12,8 @@ import VesselCard from "@/components/catalog/VesselCard";
  * El marketplace completo (naves aliadas, filtros y comparador) llega en el
  * bloque 4; aquí el cierre es el checkout de PEX con `ref=ATLANTE`.
  */
-export default function VesselsCatalog() {
+export default function VesselsCatalog({ vessels }: { vessels: Product[] }) {
   const { locale } = useLocale();
-  const vessels = pexVessels.filter((v) => v.available);
 
   useEffect(() => {
     track("view_catalog", { portal: "charters" });

@@ -14,12 +14,17 @@ export const HANDOFF_KEY = "atl_handoff";
 export interface HandoffPayload {
   slug: string;
   date: string;
+  /** Hora del catálogo (modo puente) o id de la salida del feed (integrado). */
   slot: string;
+  /** Etiqueta ya formateada del horario, p. ej. "5:30 PM – 7:00 PM". */
+  timeLabel?: string;
   pax: Pax;
   addons: string[];
   total: number;
   destinationUrl: string;
   leadId: string | null;
+  /** Con qué modo se generó el destino; sólo alimenta la analítica. */
+  mode?: "puente" | "integrado";
 }
 
 /**

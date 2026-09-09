@@ -1395,6 +1395,19 @@ textarea {
   color: var(--ivory);
 }
 
+/* Cupos por salida (modo integrado): el dato viene del feed de PEX. */
+.slot-option small {
+  display: block;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.slot-option:disabled {
+  opacity: 0.45;
+  cursor: default;
+  text-decoration: line-through;
+}
+
 .pax-row {
   display: flex;
   align-items: center;

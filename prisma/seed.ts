@@ -12,7 +12,7 @@
  *
  * No inventa datos: todo lo que escribe sale del catálogo del bloque 2.
  */
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { catalog, type Product } from "../src/content/catalog";
 
 const prisma = new PrismaClient();

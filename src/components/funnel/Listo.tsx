@@ -61,7 +61,7 @@ export default function Listo({ product, leadId }: { product: Product; leadId: s
     track("redirect_to_pex", {
       lead_id: leadId ?? "",
       target: product.slug,
-      mode: "puente",
+      mode: payload?.mode ?? "puente",
     });
 
     // Best-effort: el navegador ya se está yendo, por eso `keepalive`.
@@ -110,15 +110,16 @@ export default function Listo({ product, leadId }: { product: Product; leadId: s
             <span>{formatDate(payload.date, locale)}</span>
           </div>
         ) : null}
-        {payload?.slot ? (
+        {payload?.timeLabel || payload?.slot ? (
           <div className="summary-line">
             <span>{t("label_time", locale)}</span>
             <span>
-              {slotLabel(
-                (product.schedule?.times ?? []).find((s) => s.start === payload.slot) ?? {
-                  start: payload.slot,
-                },
-              )}
+              {payload.timeLabel ??
+                slotLabel(
+                  (product.schedule?.times ?? []).find((s) => s.start === payload.slot) ?? {
+                    start: payload.slot,
+                  },
+                )}
             </span>
           </div>
         ) : null}

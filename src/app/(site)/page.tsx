@@ -8,6 +8,7 @@ import FaqSection from "@/components/sections/FaqSection";
 import ContactSection from "@/components/sections/ContactSection";
 import PexDisclosure from "@/components/site/PexDisclosure";
 import { site } from "@/config/site";
+import { getTicketProducts, getVessels } from "@/lib/catalog";
 
 // Only verifiable facts: no rating, no review count, no email until Mark has a
 // real mailbox (PENDIENTE MARK).
@@ -24,7 +25,9 @@ const jsonLd = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const [tickets, vessels] = await Promise.all([getTicketProducts(), getVessels()]);
+
   return (
     <>
       <script
@@ -34,8 +37,8 @@ export default function Home() {
       <Hero />
       <PexDisclosure variant="banner" />
       <ValueProps />
-      <ToursSection />
-      <ChartersSection />
+      <ToursSection products={tickets.filter((p) => p.available).slice(0, 3)} />
+      <ChartersSection vessels={vessels.filter((v) => v.available).slice(0, 3)} />
       <Destinations />
       <About />
       <FaqSection />

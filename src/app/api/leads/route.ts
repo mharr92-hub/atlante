@@ -25,9 +25,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { input, product } = parseLeadInput(body);
+    const { input, product, slot } = await parseLeadInput(body);
     const attribution = await readAttribution();
-    const result = await createLead(input, product, attribution);
+    const result = await createLead(input, product, attribution, slot);
 
     return NextResponse.json({
       ok: true,

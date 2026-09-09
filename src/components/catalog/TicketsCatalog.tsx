@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { ticketProducts } from "@/content/catalog";
+import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import ProductCard from "@/components/catalog/ProductCard";
 
 /** `/tours`: todo el catálogo de ticketería disponible de Pacific Experience. */
-export default function TicketsCatalog() {
+export default function TicketsCatalog({ products }: { products: Product[] }) {
   const { locale } = useLocale();
-  const products = ticketProducts.filter((p) => p.available);
 
   useEffect(() => {
     track("view_catalog", { portal: "tours" });

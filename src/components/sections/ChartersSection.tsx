@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { pexVessels } from "@/content/catalog";
+import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 import VesselCard from "@/components/catalog/VesselCard";
 
-/** Home: las tres naves de Pacific Experience. */
-export default function ChartersSection() {
+/** Home: las tres naves de Pacific Experience (llegan por prop, ver 3.2). */
+export default function ChartersSection({ vessels }: { vessels: Product[] }) {
   const { locale } = useLocale();
-  const vessels = pexVessels.filter((v) => v.available).slice(0, 3);
 
   return (
     <section id="charters" className="section section-ivory">

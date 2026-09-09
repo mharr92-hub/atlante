@@ -6,22 +6,40 @@ import { MONTHS, WEEKDAYS_SHORT, type Locale } from "@/lib/i18n";
 import { firstSelectableDate, fromISODate, isSelectableDate, toISODate } from "@/lib/funnel";
 
 /**
- * Calendario mensual propio, sin librerías: sólo se habilitan los días de la
- * semana que PEX publica, nunca antes de mañana ni del `validFrom`. Abre en el
- * mes de la primera fecha con salida.
+ * Calendario mensual propio, sin librerías.
+ *
+ * Modo puente: se habilitan los días de la semana que PEX publica en el
+ * `schedule` del producto, nunca antes de mañana ni del `validFrom`.
+ * Modo integrado: `allowedDates` (los días con salida real del feed) manda y
+ * ningún otro día se puede elegir. En los dos casos abre en el mes de la
+ * primera fecha disponible.
  */
 export default function Calendar({
   product,
   value,
   onChange,
   locale,
+  allowedDates = null,
 }: {
   product: Product;
   value: string;
   onChange: (iso: string) => void;
   locale: Locale;
+  /** Días con salida real (`YYYY-MM-DD`); `null` = modo puente. */
+  allowedDates?: string[] | null;
 }) {
-  const first = useMemo(() => firstSelectableDate(product), [product]);
+  const allowed = useMemo(
+    () => (allowedDates ? new Set(allowedDates) : null),
+    [allowedDates],
+  );
+
+  const first = useMemo(() => {
+    if (allowedDates && allowedDates.length > 0) {
+      return fromISODate([...allowedDates].sort()[0]) ?? firstSelectableDate(product);
+    }
+    return firstSelectableDate(product);
+  }, [allowedDates, product]);
+
   const selected = fromISODate(value) ?? first;
   const [cursor, setCursor] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
 
@@ -73,7 +91,7 @@ export default function Calendar({
         {days.map((day) => {
           const date = new Date(cursor.getFullYear(), cursor.getMonth(), day);
           const iso = toISODate(date);
-          const enabled = isSelectableDate(product, date);
+          const enabled = allowed ? allowed.has(iso) : isSelectableDate(product, date);
           return (
             <button
               type="button"

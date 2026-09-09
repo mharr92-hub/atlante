@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ticketProducts } from "@/content/catalog";
+import { getTicketProducts } from "@/lib/catalog";
 import { site } from "@/config/site";
 import PexDisclosure from "@/components/site/PexDisclosure";
 import TicketsCatalog from "@/components/catalog/TicketsCatalog";
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 };
 
 /** Catálogo de ticketería con el precio publicado por el operador. */
-export default function ToursPage() {
-  const available = ticketProducts.filter((p) => p.available);
+export default async function ToursPage() {
+  const available = (await getTicketProducts()).filter((p) => p.available);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -35,7 +35,7 @@ export default function ToursPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PexDisclosure variant="banner" />
-      <TicketsCatalog />
+      <TicketsCatalog products={available} />
     </div>
   );
 }

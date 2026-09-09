@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PexDisclosure from "@/components/site/PexDisclosure";
 import VesselsCatalog from "@/components/catalog/VesselsCatalog";
+import { getVessels } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Charters",
@@ -9,11 +10,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/charters" },
 };
 
-export default function ChartersPage() {
+export default async function ChartersPage() {
+  const vessels = (await getVessels()).filter((v) => v.available);
+
   return (
     <div style={{ paddingTop: 90 }}>
       <PexDisclosure variant="banner" />
-      <VesselsCatalog />
+      <VesselsCatalog vessels={vessels} />
     </div>
   );
 }

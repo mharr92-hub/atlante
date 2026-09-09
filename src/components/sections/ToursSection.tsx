@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ticketProducts } from "@/content/catalog";
+import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 import ProductCard from "@/components/catalog/ProductCard";
 
-/** Home: los tres primeros tickets disponibles del catálogo de PEX. */
-export default function ToursSection() {
+/**
+ * Home: los tres primeros tickets disponibles del catálogo.
+ * Los productos llegan por prop desde la página (servidor), que los pide a
+ * `lib/catalog.ts`: base de datos si la hay, catálogo en código si no.
+ */
+export default function ToursSection({ products }: { products: Product[] }) {
   const { locale } = useLocale();
-  const products = ticketProducts.filter((p) => p.available).slice(0, 3);
 
   return (
     <section id="travesias" className="section">

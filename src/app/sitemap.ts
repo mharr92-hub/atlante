@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { ticketProducts } from "@/content/catalog";
+import { getTicketProducts } from "@/lib/catalog";
 import { site } from "@/config/site";
 
 /**
@@ -20,10 +20,10 @@ const staticPaths: Array<{ path: string; priority: number }> = [
   { path: "/cancelaciones", priority: 0.3 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const products = ticketProducts
+  const products = (await getTicketProducts())
     .filter((p) => p.available)
     .map((p) => ({ path: `/tours/${p.slug}`, priority: 0.8 }));
 

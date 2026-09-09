@@ -168,6 +168,20 @@ export const dict = {
     es: "La disponibilidad final se confirma en Pacific Experience.",
     en: "Final availability is confirmed on Pacific Experience.",
   },
+  live_availability_note: {
+    es: "Cupos tomados de la disponibilidad de Pacific Experience.",
+    en: "Spots taken from Pacific Experience's live availability.",
+  },
+  slot_spots: { es: "{n} cupos", en: "{n} spots" },
+  slot_full: { es: "Sin cupo", en: "Sold out" },
+  no_capacity: {
+    es: "Esa salida no tiene cupo para {n} personas.",
+    en: "That departure does not have room for {n} people.",
+  },
+  next_dates_capacity: {
+    es: "Próximas fechas con cupo:",
+    en: "Next dates with room:",
+  },
   min_group: { es: "Grupo mínimo de {n} personas", en: "Minimum group of {n} people" },
   max_group: { es: "Máximo {n} personas", en: "Maximum {n} people" },
   summary: { es: "Resumen", en: "Summary" },
@@ -196,6 +210,10 @@ export const dict = {
   err_accept: { es: "Necesitamos tu autorización para continuar.", en: "We need your authorization to continue." },
   err_date: { es: "Elige una fecha con salida disponible.", en: "Pick a date with an available departure." },
   err_pax: { es: "Revisa la cantidad de pasajeros.", en: "Check the number of passengers." },
+  err_slot: {
+    es: "Esa salida ya no tiene cupo. Elige otro horario o fecha.",
+    en: "That departure no longer has room. Pick another time or date.",
+  },
 
   // -------------------------------------------------------------- listo ----
   listo_title: {

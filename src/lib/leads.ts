@@ -1,10 +1,13 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import type { Prisma } from "@prisma/client";
-import { getProduct, type Product } from "@/content/catalog";
+import type { Product } from "@/content/catalog";
+import { getProduct, getProductSlots } from "@/lib/catalog";
 import { computeTotal, decodePax, maxPax, minPax, paxTotal, priceRows, type Pax } from "@/lib/funnel";
+import { findSlot, slotsAreFresh, type SlotOption } from "@/lib/slots";
 import { buildPexUrl } from "@/lib/pex";
 import { getDb } from "@/lib/db";
+import { notifyNewLead } from "@/lib/notify";
 import type { Attribution } from "@/lib/attribution";
 
 /** Minutos de vida del token de handoff (PRD 5.4). */
@@ -14,6 +17,8 @@ export interface LeadInput {
   slug: string;
   date?: string;
   timeSlot?: string;
+  /** `ProductSlot.pexSlotId` elegido en modo integrado. */
+  slotId?: string;
   pax: Pax;
   addons: string[];
   name: string;
@@ -117,12 +122,41 @@ function cleanAddons(product: Product, raw: string[] | undefined): string[] {
   return (raw ?? []).filter((slug) => active.has(slug));
 }
 
+/**
+ * Resuelve el `slotId` del modo integrado contra el snapshot del feed.
+ *
+ * Devuelve `null` (modo puente) si no llega `slotId` o si el snapshot no sirve
+ * — sin feed, sin base de datos o con más de 24 h — para que el handoff nunca
+ * dependa de la sincronización. Si el `slotId` sí llega y el snapshot está
+ * fresco, la salida tiene que existir y tener cupo.
+ */
+async function resolveSlot(
+  product: Product,
+  rawSlotId: unknown,
+  pax: Pax,
+): Promise<SlotOption | null> {
+  const slotId = typeof rawSlotId === "string" ? rawSlotId.trim().slice(0, 120) : "";
+  if (!slotId) return null;
+
+  const { slots, syncedAt } = await getProductSlots(product.slug);
+  if (!slotsAreFresh(slots, syncedAt)) return null;
+
+  const slot = findSlot(slots, slotId);
+  if (!slot) throw new LeadValidationError("slot", "esa salida ya no está publicada");
+  if (paxTotal(pax) > slot.capacityRemaining) {
+    throw new LeadValidationError("slot", "no hay cupo suficiente en esa salida");
+  }
+  return slot;
+}
+
 /** Convierte el cuerpo JSON crudo en un `LeadInput` validado. */
-export function parseLeadInput(body: unknown): { input: LeadInput; product: Product } {
+export async function parseLeadInput(
+  body: unknown,
+): Promise<{ input: LeadInput; product: Product; slot: SlotOption | null }> {
   const raw = (body ?? {}) as Record<string, unknown>;
 
   const slug = typeof raw.slug === "string" ? raw.slug : "";
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product || !product.available) {
     throw new LeadValidationError("slug", "producto no disponible");
   }
@@ -138,12 +172,28 @@ export function parseLeadInput(body: unknown): { input: LeadInput; product: Prod
     typeof raw.pax === "string"
       ? decodePax(raw.pax, product)
       : ((raw.pax ?? {}) as Pax);
+  const pax = cleanPax(product, paxRaw);
+
+  const slot = await resolveSlot(product, raw.slotId, pax);
+
+  // Con salida real manda el feed: su fecha y su hora, sin pasar por el
+  // calendario de `schedule` (el feed puede publicar días que el horario fijo
+  // del catálogo no contempla).
+  const date = slot
+    ? slot.date
+    : (cleanDate(product, typeof raw.date === "string" ? raw.date : undefined) ?? undefined);
+  const timeSlot = slot
+    ? slot.start
+    : typeof raw.timeSlot === "string"
+      ? raw.timeSlot.slice(0, 20)
+      : undefined;
 
   const input: LeadInput = {
     slug: product.slug,
-    date: cleanDate(product, typeof raw.date === "string" ? raw.date : undefined) ?? undefined,
-    timeSlot: typeof raw.timeSlot === "string" ? raw.timeSlot.slice(0, 20) : undefined,
-    pax: cleanPax(product, paxRaw),
+    date,
+    timeSlot,
+    slotId: slot?.id,
+    pax,
     addons: cleanAddons(product, Array.isArray(raw.addons) ? (raw.addons as string[]) : []),
     name: cleanName(String(raw.name ?? "")),
     email: cleanEmail(String(raw.email ?? "")),
@@ -155,18 +205,48 @@ export function parseLeadInput(body: unknown): { input: LeadInput; product: Prod
     accepted: true,
   };
 
-  return { input, product };
+  return { input, product, slot };
 }
 
 // --------------------------------------------------------------- destino ----
 
+/** `trip_id` de PEX del producto, o `null` si es una nave o no se conoce. */
+function tripIdOf(product: Product): string | null {
+  return product.pexCheckout?.kind === "tour" ? product.pexCheckout.tripId : null;
+}
+
+/**
+ * A dónde se manda a la persona.
+ *
+ * Modo integrado (3.3): con salida real del feed y `trip_id` conocido, deep link
+ * directo al checkout de PEX con `slot_id`, `date` y `tickets`.
+ * Modo puente: la página del producto (o el checkout de la nave), como en R1.
+ */
 export function destinationFor(
   product: Product,
   addons: string[],
   leadId?: string,
   handoffToken?: string,
+  slot?: SlotOption | null,
+  tickets?: number,
 ): string {
   const isCharter = product.kind === "charter_pex";
+  const tripId = tripIdOf(product);
+
+  if (!isCharter && slot && tripId) {
+    return buildPexUrl({
+      target: "tour_checkout",
+      tripId,
+      slotId: slot.id,
+      date: slot.date,
+      tickets,
+      addons,
+      leadId,
+      handoffToken,
+      campaign: product.slug,
+    });
+  }
+
   return buildPexUrl({
     target: isCharter ? "charter_checkout" : "tour_page",
     path: product.pexPath,
@@ -199,8 +279,10 @@ export async function createLead(
   input: LeadInput,
   product: Product,
   attribution: Attribution,
+  slot: SlotOption | null = null,
 ): Promise<LeadResult> {
   const total = computeTotal(product, input.pax, input.addons);
+  const people = paxTotal(input.pax);
   const db = getDb();
 
   if (!db) {
@@ -208,7 +290,7 @@ export async function createLead(
     return {
       leadId: null,
       handoffToken: null,
-      destinationUrl: destinationFor(product, input.addons),
+      destinationUrl: destinationFor(product, input.addons, undefined, undefined, slot, people),
       total,
     };
   }
@@ -221,8 +303,9 @@ export async function createLead(
       vesselSlug: product.kind === "charter_pex" ? product.slug : null,
       serviceDate: input.date ? new Date(`${input.date}T00:00:00.000Z`) : null,
       timeSlot: input.timeSlot ?? null,
+      pexSlotId: input.slotId ?? null,
       pax: input.pax as Prisma.InputJsonValue,
-      paxTotal: paxTotal(input.pax),
+      paxTotal: people,
       addons: input.addons as Prisma.InputJsonValue,
       name: input.name,
       email: input.email,
@@ -236,7 +319,14 @@ export async function createLead(
     };
 
     const lead = await db.lead.create({ data, select: { id: true } });
-    const destinationUrl = destinationFor(product, input.addons, lead.id, token);
+    const destinationUrl = destinationFor(
+      product,
+      input.addons,
+      lead.id,
+      token,
+      slot,
+      people,
+    );
 
     await db.$transaction([
       db.lead.update({ where: { id: lead.id }, data: { destinationUrl } }),
@@ -249,6 +339,18 @@ export async function createLead(
       }),
     ]);
 
+    // Aviso al concierge (3.4). Nunca bloquea ni rompe el handoff.
+    await notifyNewLead({
+      leadId: lead.id,
+      productSlug: product.slug,
+      productName: product.name.es,
+      serviceDate: input.date ?? null,
+      timeSlot: input.timeSlot ?? null,
+      paxTotal: people,
+      total,
+      mode: slot ? "integrado" : "puente",
+    });
+
     return { leadId: lead.id, handoffToken: token, destinationUrl, total };
   } catch {
     // Sin PII en el log: sólo que la escritura no fue posible.
@@ -256,7 +358,7 @@ export async function createLead(
     return {
       leadId: null,
       handoffToken: null,
-      destinationUrl: destinationFor(product, input.addons),
+      destinationUrl: destinationFor(product, input.addons, undefined, undefined, slot, people),
       total,
     };
   }

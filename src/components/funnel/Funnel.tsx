@@ -23,6 +23,13 @@ import {
   usesTimeSlots,
   type Pax,
 } from "@/lib/funnel";
+import {
+  datesWithSlots,
+  firstSlotDate,
+  nextDatesWithCapacity,
+  slotsForDate,
+  type SlotOption,
+} from "@/lib/slots";
 import { destinationFallback, HANDOFF_KEY, type HandoffPayload } from "@/lib/handoff-storage";
 import { readCookie, useClientString } from "@/lib/client-store";
 import { PARTNER_COOKIE } from "@/lib/attribution-cookies";
@@ -33,13 +40,28 @@ import PexDisclosure from "@/components/site/PexDisclosure";
 /** Si `POST /api/leads` tarda más que esto, se sigue sin lead. */
 const API_TIMEOUT_MS = 4000;
 
-export default function Funnel({ product }: { product: Product }) {
+/**
+ * Funnel de 3 clics.
+ *
+ * `slots` llega vacío mientras PEX no publique el feed (X4): entonces el paso 2
+ * funciona con el `schedule` del catálogo, exactamente como en el bloque 2
+ * (modo puente). Con salidas sincronizadas pasa a modo integrado: sólo días con
+ * salida real, cupos por horario y deep link al checkout de PEX.
+ */
+export default function Funnel({
+  product,
+  slots = [],
+}: {
+  product: Product;
+  slots?: SlotOption[];
+}) {
   const { locale } = useLocale();
   const router = useRouter();
   const params = useSearchParams();
 
   const rows = priceRows(product);
   const addons = activeAddons(product);
+  const integrated = slots.length > 0;
   const withSlots = usesTimeSlots(product);
 
   const step = Math.min(3, Math.max(1, Number(params.get("step") ?? 1) || 1));
@@ -48,8 +70,25 @@ export default function Funnel({ product }: { product: Product }) {
   // paso 2 ya abre con la primera fecha con salida elegida aunque la
   // sincronización con la URL (más abajo) no llegue a correr.
   const times = product.schedule?.times ?? [];
-  const date = params.get("date") || toISODate(firstSelectableDate(product));
-  const slot = params.get("slot") || (withSlots ? (times[0]?.start ?? "") : "");
+  const slotDates = useMemo(() => (integrated ? datesWithSlots(slots) : []), [integrated, slots]);
+  const defaultDate = integrated
+    ? (firstSlotDate(slots) ?? toISODate(firstSelectableDate(product)))
+    : toISODate(firstSelectableDate(product));
+  const date = params.get("date") || defaultDate;
+
+  // En modo integrado el parámetro `slot` guarda el id de la salida del feed;
+  // en modo puente, la hora de inicio publicada en el catálogo.
+  const daySlots = useMemo(
+    () => (integrated ? slotsForDate(slots, date) : []),
+    [integrated, slots, date],
+  );
+  const slotParam = params.get("slot") ?? "";
+  const currentSlot: SlotOption | null = integrated
+    ? (daySlots.find((s) => s.id === slotParam) ?? daySlots[0] ?? null)
+    : null;
+  const slot = integrated
+    ? (currentSlot?.id ?? "")
+    : slotParam || (withSlots ? (times[0]?.start ?? "") : "");
 
   const pax = useMemo<Pax>(() => {
     const parsed = decodePax(params.get("pax"), product);
@@ -63,6 +102,20 @@ export default function Funnel({ product }: { product: Product }) {
 
   const total = computeTotal(product, pax, selectedAddons);
   const people = paxTotal(pax);
+
+  // Modo integrado: el grupo tiene que caber en la salida elegida.
+  const capacityOk = !currentSlot || people <= currentSlot.capacityRemaining;
+  const alternatives = useMemo(
+    () => (integrated && !capacityOk ? nextDatesWithCapacity(slots, date, people, 3) : []),
+    [integrated, capacityOk, slots, date, people],
+  );
+
+  /** "5:30 PM – 7:00 PM" del horario elegido, venga del feed o del catálogo. */
+  const timeLabel = currentSlot
+    ? slotLabel({ start: currentSlot.start, end: currentSlot.end })
+    : slot
+      ? slotLabel(times.find((s) => s.start === slot) ?? { start: slot })
+      : "";
 
   // --- datos personales: viven en el componente, nunca en la URL (regla 7) ---
   const [name, setName] = useState("");
@@ -137,11 +190,13 @@ export default function Funnel({ product }: { product: Product }) {
       slug: product.slug,
       date,
       slot,
+      timeLabel,
       pax,
       addons: selectedAddons,
       total,
       destinationUrl,
       leadId,
+      mode: integrated ? "integrado" : "puente",
     };
     try {
       sessionStorage.setItem(HANDOFF_KEY, JSON.stringify(payload));
@@ -180,7 +235,8 @@ export default function Funnel({ product }: { product: Product }) {
         body: JSON.stringify({
           slug: product.slug,
           date: date || undefined,
-          timeSlot: slot || undefined,
+          timeSlot: (integrated ? currentSlot?.start : slot) || undefined,
+          slotId: currentSlot?.id,
           pax,
           addons: selectedAddons,
           name: name.trim(),
@@ -204,7 +260,9 @@ export default function Funnel({ product }: { product: Product }) {
                 ? t("err_name", locale)
                 : data.field === "date"
                   ? t("err_date", locale)
-                  : t("err_pax", locale),
+                  : data.field === "slot"
+                    ? t("err_slot", locale)
+                    : t("err_pax", locale),
         );
         return;
       }
@@ -267,14 +325,42 @@ export default function Funnel({ product }: { product: Product }) {
                 product={product}
                 value={date}
                 locale={locale}
-                onChange={(iso) => write({ date: iso }, false)}
+                allowedDates={integrated ? slotDates : null}
+                onChange={(iso) => write({ date: iso, slot: null }, false)}
               />
               {product.kind === "ferry" ? (
                 <p className="funnel-note">{t("open_ticket_note", locale)}</p>
               ) : null}
             </div>
 
-            {withSlots ? (
+            {integrated && daySlots.length > 0 ? (
+              <div className="funnel-card">
+                <h3>{t("choose_time", locale)}</h3>
+                <div className="slot-list">
+                  {daySlots.map((option) => {
+                    const selected = option.id === slot;
+                    const full = option.capacityRemaining <= 0;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`slot-option${selected ? " is-selected" : ""}`}
+                        aria-pressed={selected}
+                        disabled={full}
+                        onClick={() => write({ slot: option.id }, false)}
+                      >
+                        {slotLabel({ start: option.start, end: option.end })}
+                        <small>
+                          {full
+                            ? t("slot_full", locale)
+                            : tf("slot_spots", locale, { n: option.capacityRemaining })}
+                        </small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : withSlots ? (
               <div className="funnel-card">
                 <h3>{t("choose_time", locale)}</h3>
                 <div className="slot-list">
@@ -358,7 +444,34 @@ export default function Funnel({ product }: { product: Product }) {
             ) : null}
 
             <div className="funnel-card">
-              <p className="funnel-note">{t("availability_note", locale)}</p>
+              {!integrated ? (
+                <p className="funnel-note">{t("availability_note", locale)}</p>
+              ) : capacityOk ? (
+                <p className="funnel-note">{t("live_availability_note", locale)}</p>
+              ) : (
+                <div className="funnel-error" role="alert">
+                  <p style={{ margin: 0 }}>{tf("no_capacity", locale, { n: people })}</p>
+                  {alternatives.length > 0 ? (
+                    <>
+                      <p className="funnel-note" style={{ margin: "10px 0 8px" }}>
+                        {t("next_dates_capacity", locale)}
+                      </p>
+                      <div className="slot-list">
+                        {alternatives.map((iso) => (
+                          <button
+                            key={iso}
+                            type="button"
+                            className="slot-option"
+                            onClick={() => write({ date: iso, slot: null }, false)}
+                          >
+                            {formatDate(iso, locale)}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              )}
               <div className="funnel-actions">
                 <button type="button" className="funnel-back" onClick={() => goToStep(1)}>
                   {t("step_back", locale)}
@@ -366,7 +479,7 @@ export default function Funnel({ product }: { product: Product }) {
                 <button
                   type="button"
                   className="button button-primary"
-                  disabled={!date || people < minPax(product)}
+                  disabled={!date || people < minPax(product) || !capacityOk}
                   onClick={() => goToStep(3)}
                 >
                   {t("continue_cta", locale)}
@@ -390,10 +503,10 @@ export default function Funnel({ product }: { product: Product }) {
                   <span>{formatDate(date, locale)}</span>
                 </div>
               ) : null}
-              {withSlots && slot ? (
+              {timeLabel ? (
                 <div className="summary-line">
                   <span>{t("label_time", locale)}</span>
-                  <span>{slotLabel(times.find((s) => s.start === slot) ?? { start: slot })}</span>
+                  <span>{timeLabel}</span>
                 </div>
               ) : null}
               {rows

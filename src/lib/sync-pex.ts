@@ -16,6 +16,7 @@ import {
   type FeedOptions,
   type PexSlot,
   type PexTrip,
+  type PexTripKind,
 } from "@/lib/pex-feed";
 
 /** Ventana de salidas que se copia en cada corrida. */
@@ -45,6 +46,7 @@ export interface ProductFeedFields {
 export interface ProductCreateFields extends ProductFeedFields {
   slug: string;
   kind: string;
+  priceUnit: string;
   name: { es: string; en: string };
   summary: { es: string; en: string };
   description: { es: string; en: string };
@@ -149,11 +151,21 @@ export function tripToFeedFields(trip: PexTrip, now: Date): ProductFeedFields {
   };
 }
 
+/**
+ * El feed no publica la unidad de cobro: el ferry se vende por tramo y el resto
+ * por persona, tal como los publica PEX. Mark lo corrige en `/admin/catalogo` si
+ * algún producto nuevo no encaja.
+ */
+export function priceUnitFor(kind: PexTripKind): string {
+  return kind === "ferry" ? "per_segment" : "per_person";
+}
+
 export function tripToCreateFields(trip: PexTrip, now: Date): ProductCreateFields {
   return {
     ...tripToFeedFields(trip, now),
     slug: trip.slug,
     kind: trip.kind,
+    priceUnit: priceUnitFor(trip.kind),
     name: bilingual(trip.name),
     summary: bilingual(""),
     description: bilingual(""),
@@ -202,7 +214,8 @@ export async function syncPex(opts: SyncOptions): Promise<SyncResult> {
   }
 
   const { from, to } = syncWindow(now, windowDays);
-  const result: SyncResult = { ok: true, trips: trips.length, ...empty, slotErrors: [] };
+  // `empty` va primero: si se pusiera después pisaría `trips` con 0.
+  const result: SyncResult = { ok: true, ...empty, trips: trips.length, slotErrors: [] };
 
   for (const trip of trips) {
     const existing = await db.findProduct(trip.id, trip.slug);

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { getProduct, ticketProducts } from "@/content/catalog";
+import { getProduct, getTicketProducts } from "@/lib/catalog";
 import { site } from "@/config/site";
 import { L, type Locale } from "@/lib/i18n";
 import { PEX_BRAND } from "@/lib/pex";
 import ProductDetail from "@/components/catalog/ProductDetail";
 
-export function generateStaticParams() {
-  return ticketProducts.filter((p) => p.available).map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const products = await getTicketProducts();
+  return products.filter((p) => p.available).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -17,7 +18,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product || !product.available) return {};
   const cookieStore = await cookies();
   const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
@@ -43,7 +44,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   // Un producto que PEX no está vendiendo no tiene ficha pública.
   if (!product || !product.available || product.kind === "charter_pex") notFound();
 

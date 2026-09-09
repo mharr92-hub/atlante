@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProduct } from "@/content/catalog";
+import { getProduct } from "@/lib/catalog";
 import Listo from "@/components/funnel/Listo";
 
 // Pantalla de tránsito: no se indexa (PRD 5.1) y siempre se renderiza fresca.
@@ -20,7 +20,7 @@ export default async function ListoPage({
 }) {
   const { slug } = await params;
   const { lead } = await searchParams;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product || !product.available) notFound();
 
   return <Listo product={product} leadId={lead ?? null} />;
