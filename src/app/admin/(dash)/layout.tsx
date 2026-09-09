@@ -15,8 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav>
           <Link href="/admin">Resumen</Link>
-          <Link href="/admin/bookings">Reservas</Link>
-          <Link href="/admin/calendar">Disponibilidad</Link>
+          <Link href="/admin/leads">Leads</Link>
         </nav>
         <form action={logoutAction} className="admin-logout">
           <button type="submit">Cerrar sesion</button>

@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
-import ChartersSection from "@/components/sections/ChartersSection";
 import PexDisclosure from "@/components/site/PexDisclosure";
+import VesselsCatalog from "@/components/catalog/VesselsCatalog";
 
 export const metadata: Metadata = {
   title: "Charters",
   description:
-    "Renta total de embarcacion desde Ciudad de Panama hacia Taboga, la Bahia y Las Perlas. Cotizas con Atlante y pagas directo con el operador.",
+    "Naves de Pacific Experience para grupos: Aura, Pacific Ferry 1 y Sirena del Mar, con salida desde Marina Flamenco. La reserva se completa en su checkout.",
   alternates: { canonical: "/charters" },
 };
 
-/**
- * Placeholder charters page: it renders the home section so the hero and footer
- * links do not 404. Block 2 replaces it with the vessel marketplace.
- */
 export default function ChartersPage() {
   return (
     <div style={{ paddingTop: 90 }}>
       <PexDisclosure variant="banner" />
-      <ChartersSection />
+      <VesselsCatalog />
     </div>
   );
 }

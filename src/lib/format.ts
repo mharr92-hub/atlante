@@ -1,12 +1,13 @@
 /**
- * Money and pricing helpers.
+ * Money helpers.
  *
  * USD only: Panama uses the US dollar and the payment always happens on the
  * operator's checkout (Pacific Experience charges in USD). R0 removed the
  * USD/EUR/COP/MXN selector and its fixed reference rates — converting on the
  * client showed a price the customer would never actually be charged.
  */
-import type { Tour } from "@/content/tours";
+import type { PriceUnit } from "@/content/catalog";
+import { t, type DictKey, type Locale } from "@/lib/i18n";
 
 /**
  * Format a USD amount. Whole dollars render without decimals; amounts with
@@ -22,20 +23,13 @@ export function money(usd: number): string {
   }).format(usd);
 }
 
-/**
- * Compute the price for a tour given a guest count.
- * - perPerson: priceFrom * guests
- * - perBoat: priceFrom + max(0, guests - baseCapacity) * extraGuestPrice
- */
-export function priceForGuests(tour: Tour, guests: number): number {
-  const p = tour.pricing;
-  const g = Math.max(1, Math.min(guests, p.maxCapacity));
-  if (p.model === "perPerson") return p.priceFrom * g;
-  const extra = Math.max(0, g - p.baseCapacity) * (p.extraGuestPrice ?? 0);
-  return p.priceFrom + extra;
-}
+const UNIT_KEY: Record<PriceUnit, DictKey> = {
+  per_person: "per_person",
+  per_segment: "per_segment",
+  per_boat: "per_boat",
+};
 
-/** Deposit due now to lock the date. */
-export function depositAmount(total: number, percent: number): number {
-  return Math.round((total * percent) / 100);
+/** "desde $25 por persona" / "from $25 per person". */
+export function priceFromLabel(amount: number, unit: PriceUnit, locale: Locale): string {
+  return `${t("from", locale)} ${money(amount)} ${t(UNIT_KEY[unit], locale)}`;
 }

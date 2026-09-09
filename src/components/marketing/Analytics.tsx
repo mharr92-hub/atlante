@@ -1,6 +1,7 @@
 "use client";
 
 import Script from "next/script";
+import { PEX_DOMAIN_LABEL } from "@/lib/pex";
 
 /**
  * GA4 + Meta Pixel loader.
@@ -8,6 +9,10 @@ import Script from "next/script";
  *   NEXT_PUBLIC_GA_ID       (e.g. G-XXXXXXX)
  *   NEXT_PUBLIC_META_PIXEL_ID
  * No IDs -> nothing is injected, so there's zero tracking in dev/preview.
+ *
+ * GA4 carries the cross-domain `linker` towards Pacific Experience so the
+ * session survives the handoff and the purchase can be attributed to Atlante
+ * (PRD 5.12). The domain comes from `src/lib/pex.ts`: never typed by hand.
  */
 export default function Analytics() {
   const ga = process.env.NEXT_PUBLIC_GA_ID;
@@ -22,7 +27,7 @@ export default function Analytics() {
             strategy="afterInteractive"
           />
           <Script id="ga4" strategy="afterInteractive">
-            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}');`}
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}',{linker:{domains:['${PEX_DOMAIN_LABEL}']}});`}
           </Script>
         </>
       ) : null}

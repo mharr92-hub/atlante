@@ -323,32 +323,6 @@ p {
 }
 
 /* ---------- Filters + cards ---------- */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 34px;
-}
-
-.filter {
-  min-height: 42px;
-  border: 1px solid rgba(248, 243, 232, 0.35);
-  background: transparent;
-  color: var(--ivory);
-  padding: 0 16px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.filter.is-active {
-  border-color: var(--gold);
-  background: var(--gold);
-  color: var(--ink);
-}
-
 .charter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -370,21 +344,12 @@ p {
 
 .card-image {
   position: relative;
+  display: block;
   aspect-ratio: 4 / 3;
-  background: linear-gradient(rgba(10, 36, 33, 0.12), rgba(10, 36, 33, 0.38)),
-    url("/og-atlante.jpg") center / cover;
-}
-
-.card-evening {
-  background-position: center 40%;
-}
-
-.card-taboga {
-  background-position: 38% 50%;
-}
-
-.card-perlas {
-  background-position: 68% 55%;
+  background-color: rgba(10, 36, 33, 0.18);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .charter-card h3,
@@ -714,38 +679,6 @@ textarea {
   font-size: 13px;
   color: rgba(10, 36, 33, 0.6);
 }
-.stepper {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(10, 36, 33, 0.2);
-}
-.stepper button {
-  width: 42px;
-  height: 42px;
-  border: 0;
-  background: transparent;
-  font-size: 20px;
-  cursor: pointer;
-}
-.stepper span {
-  width: 48px;
-  text-align: center;
-  font-weight: 700;
-}
-.price-line {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  font-size: 15px;
-}
-.price-line.total {
-  border-top: 1px solid rgba(10, 36, 33, 0.16);
-  margin-top: 6px;
-  padding-top: 12px;
-  font-weight: 700;
-  font-size: 18px;
-}
-
 /* weather widget */
 .weather-card {
   display: flex;
@@ -758,17 +691,6 @@ textarea {
 .weather-card .temp {
   font-family: var(--font-serif);
   font-size: 32px;
-}
-
-/* map */
-.route-map {
-  height: 340px;
-  width: 100%;
-  border: 1px solid rgba(10, 36, 33, 0.12);
-  z-index: 0;
-}
-.leaflet-container {
-  font-family: inherit;
 }
 
 /* ---------- PEX disclosure ---------- */
@@ -1059,16 +981,24 @@ textarea {
   color: #a03b25;
   border-color: #e0b7ac;
 }
-.slot-form {
+.admin-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
+  align-items: flex-end;
 }
-.slot-form select,
-.slot-form input {
+.admin-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(10, 36, 33, 0.6);
+}
+.admin-filters select,
+.admin-filters input {
   width: auto;
   padding: 9px 11px;
+  border: 1px solid rgba(10, 36, 33, 0.2);
   border-radius: 6px;
   font-size: 14px;
 }
@@ -1180,4 +1110,543 @@ textarea {
   .button {
     width: 100%;
   }
+}
+
+/* ============================================================
+   R1 — catálogo real de PEX, funnel de 3 clics y pantalla /listo.
+   Móvil primero (390 px): 15 px mínimo, botones de 44 px, sin
+   scroll horizontal.
+   ============================================================ */
+
+/* ---------- Tarjetas del catálogo ---------- */
+.card-kind {
+  margin: 16px 24px 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.card-price {
+  margin: 6px 24px 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.charter-card .card-price {
+  color: var(--ivory);
+}
+
+.charter-card.light-card .card-price {
+  color: var(--ink);
+}
+
+.card-cta {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+.section-more {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Ficha de producto ---------- */
+.price-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.price-table th {
+  text-align: left;
+  font-weight: 500;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(10, 36, 33, 0.12);
+}
+
+.price-table td {
+  text-align: right;
+  font-weight: 700;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(10, 36, 33, 0.12);
+  white-space: nowrap;
+}
+
+.price-note {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(10, 36, 33, 0.62);
+}
+
+.sub-h3 {
+  margin: 24px 0 8px;
+  font-size: 19px;
+}
+
+.sticky-cta {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .sticky-cta {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: block;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(248, 243, 232, 0.97);
+    border-top: 1px solid rgba(10, 36, 33, 0.14);
+  }
+  .sticky-cta .button {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* el CTA fijo no puede tapar el pie de página */
+  .site-footer {
+    padding-bottom: 100px;
+  }
+}
+
+/* ---------- Funnel ---------- */
+.funnel {
+  padding: 110px 0 64px;
+  background: var(--ivory);
+}
+
+.funnel-inner {
+  width: min(720px, 100% - 32px);
+  margin: 0 auto;
+}
+
+.funnel-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.funnel-steps span {
+  flex: 1;
+  height: 6px;
+  background: rgba(10, 36, 33, 0.14);
+  border-radius: 3px;
+}
+
+.funnel-steps span.is-done {
+  background: var(--gold);
+}
+
+.funnel-step-label {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(10, 36, 33, 0.6);
+  margin: 0 0 18px;
+}
+
+.funnel-card {
+  background: var(--white);
+  border: 1px solid rgba(10, 36, 33, 0.12);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.funnel-card h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+}
+
+.funnel-card h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.funnel p,
+.funnel li,
+.funnel label {
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(10, 36, 33, 0.86);
+}
+
+.funnel-note {
+  font-size: 14px;
+  color: rgba(10, 36, 33, 0.66);
+}
+
+.funnel-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.funnel-actions .button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.funnel-back {
+  min-height: 44px;
+  background: none;
+  border: 0;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 15px;
+  color: rgba(10, 36, 33, 0.7);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.funnel-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: rgba(184, 115, 58, 0.12);
+  border-left: 3px solid var(--bronze);
+  font-size: 15px;
+}
+
+/* ---------- Calendario del paso 2 ---------- */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cal-head strong {
+  font-size: 17px;
+  text-transform: capitalize;
+}
+
+.cal-nav {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(10, 36, 33, 0.2);
+  background: var(--white);
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.cal-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: rgba(10, 36, 33, 0.55);
+  padding-bottom: 6px;
+}
+
+.cal-day {
+  min-height: 44px;
+  border: 1px solid rgba(10, 36, 33, 0.14);
+  background: var(--white);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cal-day:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: rgba(10, 36, 33, 0.28);
+  cursor: default;
+}
+
+.cal-day.is-selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ivory);
+  font-weight: 700;
+}
+
+.cal-empty {
+  min-height: 44px;
+}
+
+/* ---------- Horarios, pasajeros y adicionales ---------- */
+.slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slot-option {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(10, 36, 33, 0.2);
+  background: var(--white);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.slot-option.is-selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ivory);
+}
+
+.pax-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(10, 36, 33, 0.1);
+}
+
+.pax-row:last-child {
+  border-bottom: 0;
+}
+
+.pax-label {
+  font-size: 15px;
+}
+
+.pax-label small {
+  display: block;
+  font-size: 13px;
+  color: rgba(10, 36, 33, 0.6);
+}
+
+.pax-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(10, 36, 33, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pax-stepper button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: var(--white);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.pax-stepper button:disabled {
+  color: rgba(10, 36, 33, 0.3);
+  cursor: default;
+}
+
+.pax-stepper span {
+  min-width: 44px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.addon-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+}
+
+.addon-row input {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  flex: none;
+}
+
+/* ---------- Formulario del paso 3 ---------- */
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.field span {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: rgba(10, 36, 33, 0.7);
+}
+
+.field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid rgba(10, 36, 33, 0.24);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 16px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.field-phone {
+  display: flex;
+  align-items: stretch;
+}
+
+.field-phone .prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(10, 36, 33, 0.24);
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: rgba(10, 36, 33, 0.05);
+  font-size: 16px;
+}
+
+.field-phone input {
+  border-radius: 0 6px 6px 0;
+}
+
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 18px 0;
+}
+
+.consent input {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.consent a {
+  text-decoration: underline;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(10, 36, 33, 0.08);
+}
+
+.summary-line.total {
+  border-top: 1px solid rgba(10, 36, 33, 0.16);
+  border-bottom: 0;
+  margin-top: 6px;
+  padding-top: 12px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ---------- Pantalla /listo ---------- */
+.listo {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 100px 16px 60px;
+  background: var(--ink);
+  color: var(--ivory);
+}
+
+.listo-card {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid rgba(10, 36, 33, 0.12);
+  box-shadow: var(--shadow);
+  padding: 26px;
+}
+
+.listo-card h1 {
+  font-size: clamp(24px, 6vw, 32px);
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+.listo-card p {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.listo-code {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+  padding: 14px;
+  background: rgba(215, 168, 91, 0.16);
+  border: 1px dashed var(--gold);
+}
+
+.listo-code strong {
+  font-size: 22px;
+  letter-spacing: 0.12em;
+}
+
+.listo-copy {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.listo .button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Estados de lead en el admin ---------- */
+.pill-created {
+  background: rgba(10, 36, 33, 0.1);
+  color: var(--ink);
+}
+.pill-redirected {
+  background: rgba(215, 168, 91, 0.26);
+  color: #6f4c0e;
+}
+.pill-paid_unmatched {
+  background: rgba(184, 115, 58, 0.2);
+  color: #7a3f11;
+}
+.pill-lost {
+  background: rgba(180, 40, 40, 0.14);
+  color: #8c1f1f;
+}
+.pill-quote_requested,
+.pill-quoted,
+.pill-accepted {
+  background: rgba(18, 59, 54, 0.12);
+  color: var(--deep);
 }

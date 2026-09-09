@@ -1,23 +1,41 @@
 import type { Metadata } from "next";
-import ToursSection from "@/components/sections/ToursSection";
+import { ticketProducts } from "@/content/catalog";
+import { site } from "@/config/site";
 import PexDisclosure from "@/components/site/PexDisclosure";
+import TicketsCatalog from "@/components/catalog/TicketsCatalog";
 
 export const metadata: Metadata = {
   title: "Tickets y tours",
   description:
-    "Ferry, tours y experiencias en el Pacifico panameno de operadores verificados. Comparas aqui y pagas directo con el operador.",
+    "Ferry, tours y party en la Bahía de Panamá operados por Pacific Experience, con su precio real. Eliges aquí y pagas en su checkout.",
   alternates: { canonical: "/tours" },
 };
 
-/**
- * Placeholder catalog page: it renders the home section so the header, hero and
- * footer links do not 404. Block 2 replaces it with the real PEX catalog.
- */
+/** Catálogo de ticketería con el precio publicado por el operador. */
 export default function ToursPage() {
+  const available = ticketProducts.filter((p) => p.available);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Tickets y tours",
+    numberOfItems: available.length,
+    itemListElement: available.map((product, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: product.name.es,
+      url: `${site.url}/tours/${product.slug}`,
+    })),
+  };
+
   return (
     <div style={{ paddingTop: 90 }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <PexDisclosure variant="banner" />
-      <ToursSection />
+      <TicketsCatalog />
     </div>
   );
 }

@@ -1,35 +1,33 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect } from "react";
 import { ticketProducts } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 import ProductCard from "@/components/catalog/ProductCard";
 
-/** Home: los tres primeros tickets disponibles del catálogo de PEX. */
-export default function ToursSection() {
+/** `/tours`: todo el catálogo de ticketería disponible de Pacific Experience. */
+export default function TicketsCatalog() {
   const { locale } = useLocale();
-  const products = ticketProducts.filter((p) => p.available).slice(0, 3);
+  const products = ticketProducts.filter((p) => p.available);
+
+  useEffect(() => {
+    track("view_catalog", { portal: "tours" });
+  }, []);
 
   return (
-    <section id="travesias" className="section">
+    <section className="section">
       <div className="section-inner">
         <div className="section-heading">
           <p className="eyebrow">{t("tours_eyebrow", locale)}</p>
-          <h2>{t("tours_title", locale)}</h2>
+          <h1>{t("tours_title", locale)}</h1>
           <p>{t("tours_lede", locale)}</p>
         </div>
-
         <div className="charter-grid">
           {products.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
-        </div>
-
-        <div className="section-more">
-          <Link className="button button-ghost" href="/tours">
-            {t("view_all_tours", locale)}
-          </Link>
         </div>
       </div>
     </section>
