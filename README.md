@@ -1,81 +1,85 @@
-# Atlante del Pacifico
+# Atlante del Pacífico
 
-Independent booking & marketing web app for Atlante del Pacifico — private tours and
-yacht charters from Panama City, Taboga and Las Perlas.
+Sitio de **Atlante del Pacífico** (`www.atlantedelpacifico.lat`): un broker
+marítimo que compara ferry, tours y charters de operadores verificados en el
+Pacífico panameño y lleva al cliente al pago **directo con el operador**.
 
-Built as a **Next.js 16 (App Router, TypeScript) + Tailwind v4** full-stack app,
-deployable on **Vercel**. Booking/payment patterns reference the `catamaran-rentals-prod`
-app but this is a fully separate codebase.
+**Next.js 16 (App Router, TypeScript) + Tailwind v4 + Prisma 6** sobre Postgres
+(proyecto Supabase "ATLANTE"), desplegado en Vercel. Es un proyecto totalmente
+separado de Pacific Experience (PEX, `pacificexperience.lat`).
 
-## Run locally
+## Reglas
+
+Tres reglas mandan sobre cualquier otra consideración:
+
+1. **Atlante nunca cobra.** No hay pasarela, formulario de tarjeta, SDK de pagos
+   ni ruta de pago. El pago ocurre en Pacific Experience o con el operador
+   aliado, que es quien presta el servicio y responde por él.
+2. **`buildPexUrl()` es el único enlace a PEX.** Vive en `src/lib/pex.ts` y es
+   el único archivo donde puede aparecer el dominio de PEX. Toda salida lleva
+   `ref=ATLANTE` y las UTM; nunca viajan nombre, correo ni teléfono en la URL.
+3. **Nunca la palabra "Sunset"**, ni en ES ni en EN, ni como identificador
+   interno. Se usa "atardecer" / "evening" / "dusk".
+
+A esas se suma el principio que ordenó R0: **cero datos inventados en público**.
+Un precio, un cupo, una reseña o una métrica sólo se muestran si tienen fuente y
+fecha de verificación.
+
+## Correr en local
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm run build    # production build
+npm run build    # build de producción
+npm run lint
 ```
 
-Phase 1 (the marketing site) needs **no** environment variables. Phase 2 features
-each require an account — see `.env.example`.
+El sitio público funciona sin ninguna variable de entorno: si falta
+`DATABASE_URL` o la base está caída, la navegación y el paso al operador siguen
+funcionando. Ver `.env.example` para la lista completa de variables.
 
-## Architecture
+## Arquitectura
 
 ```
 src/
-  app/                 App Router pages
-    page.tsx           Home (all sections)
-    tours/[slug]/      Tour & charter detail pages (SEO + JSON-LD)
-    compare/           Side-by-side compare
-    api/lead/          Email-capture endpoint (stub -> Phase 2)
+  app/
+    (site)/            Sitio público
+      page.tsx         Home (hero, disclosure, secciones)
+      tours/           Catálogo (placeholder) y ficha /tours/[slug]
+      charters/        Charters (placeholder)
+      como-funciona/ terminos/ privacidad/ cancelaciones/   BORRADOR
+    admin/             Panel con contraseña (noindex)
     sitemap.ts robots.ts
   components/
-    site/              Header, Footer, floating WhatsApp
-    sections/          Home sections (hero, tours, charters, reviews, ...)
-    tour/              TourCard, TourDetail, RouteMap, WeatherWidget, PriceCalculator, Badges, CompareTable
-    marketing/         Analytics (GA4/Meta), LeadPopups (capture + exit-intent)
-  content/             tours.ts, reviews.ts  (bilingual data)
-  lib/                 i18n, locale + currency contexts, formatting/pricing
-  config/              site.ts (brand, WhatsApp, trust)
-prisma/schema.prisma   Phase 2 data model (bookings, payments, coupons, ...)
+    site/              Header, Footer, WhatsApp flotante, PexDisclosure, LegalShell
+    sections/          Secciones del home
+    tour/              TourCard, TourDetail, RouteMap, WeatherWidget, Badges
+    marketing/         Analytics (GA4 / Meta, inertes sin sus IDs)
+  content/             tours.ts (catálogo placeholder, se reemplaza en R1)
+  lib/                 i18n, contexto de locale, formato, pex.ts, auth, db
+  config/              site.ts (marca, dominio, WhatsApp, navegación)
+prisma/schema.prisma   Modelo de datos
 ```
 
-Bilingual **ES/EN** everywhere (locale context + cookie for SSR + browser detection).
-Multi-currency **USD/EUR/COP/MXN** with reference rates in `lib/format.ts`.
+Bilingüe **ES/EN** por cookie `locale` resuelta en el servidor, con objetos
+`{ es, en }` y el diccionario de `src/lib/i18n.ts`. Moneda: **sólo USD**.
 
-## Feature status vs. the 50-item plan
+## Estado
 
-### Done (Phase 1 — no external accounts)
-Tour landing pages (gallery, itinerary, included/excluded, per-tour FAQ, difficulty
-badges) · interactive route map (OpenStreetMap) · live weather (Open-Meteo) · compare
-tours · reviews/social-proof + JSON-LD aggregate rating · trust indicators · urgency
-pills · group-size price calculator with deposit · multi-currency · bilingual ES/EN +
-auto-detect · SEO + Open Graph per page · sitemap/robots · email-capture + exit-intent
-popups · floating WhatsApp + pre-filled messages · GA4/Meta Pixel loaders (inert until IDs set).
+- **R0 — Limpieza y verdad: hecho** (bloque 1). Dominio `.lat`; sin reseñas,
+  sin `aggregateRating`, sin métricas de confianza, sin píldoras de urgencia,
+  sin selector de moneda, sin popup de descuento y sin la palabra "Sunset";
+  `buildPexUrl()`, disclosure de agente autorizado, páginas legales en
+  BORRADOR, redirecciones 301 y `.env.example`. Ver
+  `docs/reportes/bloque-01.md`.
+- **R1 — Ticketería PEX (modo puente)**, **R1c — modo integrado**,
+  **R2 — marketplace de charters**, **R3 — alianzas** y **R4 — crecimiento**:
+  pendientes. El alcance de cada uno está en `docs/PRD-atlante-v2.md` y el
+  desglose en `docs/TODO-atlante-v2.md`.
 
-### To wire (Phase 2 — needs your accounts, schema is ready)
-No online payment gateway — bookings are closed over WhatsApp and marked paid
-manually (cash / bank transfer). Remaining: real availability calendar · admin
-dashboard (create/block dates, mark paid, view revenue) · booking request +
-confirmation emails · QR boarding tickets · automated email sequences (Resend) ·
-SMS/WhatsApp reminders (Twilio) · digital waivers · coupon redemption (schema in
-place; client codes today) · gift cards · referral/affiliate portal · loyalty ·
-auto-collected post-trip reviews · weather rebooking flow · Google Calendar sync.
+## Notas
 
-## Phase 2 setup (when ready)
-
-1. Create a Postgres DB (Neon or Supabase) → set `DATABASE_URL` + `DIRECT_URL`.
-2. `npx prisma migrate dev --name init` then `npm run db:seed`.
-3. Resend (email) and Twilio (SMS/WhatsApp) → set their keys.
-4. Set the same vars in Vercel → Project → Settings → Environment Variables.
-
-## Deploy (Vercel)
-
-Push to GitHub (`origin` is already set). In Vercel, "Import Project" from the
-`atlante` repo — it auto-detects Next.js. No config needed for Phase 1.
-
-## Notes
-
-- Only `og-atlante.jpg` and `logo.png` ship as real imagery; galleries reuse the hero
-  as a placeholder. Drop real trip photos into `public/` and update `gallery`/`heroImage`
-  in `content/tours.ts`.
-- WhatsApp number, brand and trust numbers live in `src/config/site.ts`.
+- `og-atlante.jpg` y `logo.png` son la única imagen real; las galerías reusan el
+  hero como placeholder. Las fotos reales llegan con el catálogo de R1.
+- WhatsApp, marca, dominio y navegación viven en `src/config/site.ts`.
+- Las migraciones contra la base remota las corre Mark (`prisma migrate deploy`).
