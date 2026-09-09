@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { commissionPctFor, defaultCommissionPct } from "@/lib/catalog";
+import { commissionPctForVessel } from "@/lib/vessels";
 import { getDb } from "@/lib/db";
 import {
   commissionFor,
@@ -106,10 +107,12 @@ async function handlePaid(db: Db, body: WebhookBody, bookingId: string) {
 
   const lead = await findLead(db, body);
 
-  // La comisión del producto manda sobre `ATLANTE_COMMISSION_PCT`; un pago sin
-  // lead no tiene producto conocido, así que se le aplica la global.
+  // La comisión del operador (charters) o la del producto mandan sobre
+  // `ATLANTE_COMMISSION_PCT`; un pago sin lead no tiene producto conocido, así
+  // que se le aplica la global.
   const pct = lead
-    ? await commissionPctFor(lead.productSlug ?? lead.vesselSlug)
+    ? ((await commissionPctForVessel(lead.vesselSlug)) ??
+      (await commissionPctFor(lead.productSlug ?? lead.vesselSlug)))
     : defaultCommissionPct();
   const commissionAmount = commissionFor(paidAmount, pct);
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { getProducts, productLabels } from "@/lib/catalog";
+import { getProducts } from "@/lib/catalog";
+import { getAllVessels } from "@/lib/vessels";
+import { slugLabels } from "@/lib/labels";
 import { getDb } from "@/lib/db";
 import { money } from "@/lib/format";
 import {
@@ -12,7 +14,15 @@ import {
   markLeadLostAction,
   markLeadPaidAction,
   saveLeadNoteAction,
+  setLeadStatusAction,
 } from "@/app/admin/lead-actions";
+
+/** Siguiente paso de una cotización de charter (bloque 4.3). */
+const NEXT_QUOTE_STATUS: Record<string, string[]> = {
+  quote_requested: ["quoted"],
+  quoted: ["accepted"],
+  accepted: [],
+};
 
 /** Plantilla de rescate del abandono (PRD 5.2). */
 function rescueUrl(
@@ -58,7 +68,11 @@ export default async function AdminLeads({
     );
   }
 
-  const [products, label] = await Promise.all([getProducts(), productLabels()]);
+  const [products, vessels, label] = await Promise.all([
+    getProducts(),
+    getAllVessels(),
+    slugLabels(),
+  ]);
 
   let leads: Awaited<ReturnType<typeof db.lead.findMany>> = [];
   let failed = false;
@@ -105,12 +119,17 @@ export default async function AdminLeads({
             </select>
           </label>
           <label>
-            Producto
+            Producto o nave
             <select name="productSlug" defaultValue={search.productSlug ?? ""}>
               <option value="">Todos</option>
               {products.map((p) => (
                 <option key={p.slug} value={p.slug}>
                   {p.name.es}
+                </option>
+              ))}
+              {vessels.map((v) => (
+                <option key={v.slug} value={v.slug}>
+                  {v.name}
                 </option>
               ))}
             </select>
@@ -175,6 +194,18 @@ export default async function AdminLeads({
                       {lead.productSlug ?? lead.vesselSlug
                         ? label((lead.productSlug ?? lead.vesselSlug) as string)
                         : "—"}
+                      {lead.vesselSlug ? (
+                        <>
+                          <br />
+                          <span className="admin-muted">nave: {lead.vesselSlug}</span>
+                        </>
+                      ) : null}
+                      {lead.occasion ? (
+                        <>
+                          <br />
+                          <span className="admin-muted">ocasión: {lead.occasion}</span>
+                        </>
+                      ) : null}
                       {lead.partnerCode ? (
                         <>
                           <br />
@@ -185,6 +216,12 @@ export default async function AdminLeads({
                     <td>
                       {lead.serviceDate ? lead.serviceDate.toISOString().slice(0, 10) : "—"}
                       {lead.timeSlot ? ` · ${lead.timeSlot}` : ""}
+                      {lead.hours ? (
+                        <>
+                          <br />
+                          <span className="admin-muted">jornada: {lead.hours} h</span>
+                        </>
+                      ) : null}
                     </td>
                     <td>{lead.paxTotal ?? "—"}</td>
                     <td>
@@ -209,6 +246,16 @@ export default async function AdminLeads({
                             WhatsApp
                           </a>
                         ) : null}
+
+                        {(NEXT_QUOTE_STATUS[lead.status] ?? []).map((status) => (
+                          <form action={setLeadStatusAction} key={status}>
+                            <input type="hidden" name="id" value={lead.id} />
+                            <input type="hidden" name="status" value={status} />
+                            <button className="btn-sm" type="submit">
+                              {status}
+                            </button>
+                          </form>
+                        ))}
 
                         <form action={markLeadPaidAction}>
                           <input type="hidden" name="id" value={lead.id} />

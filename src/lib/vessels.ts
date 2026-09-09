@@ -227,3 +227,19 @@ export async function vesselLabels(): Promise<(slug: string) => string> {
   const names = new Map((await getAllVessels()).map((v) => [v.slug, v.name]));
   return (slug: string) => names.get(slug) ?? slug;
 }
+
+/**
+ * Comisión de Atlante con el operador de una nave (bloque 4.3).
+ *
+ * `null` cuando la nave no existe o su operador no fija ninguna: entonces manda
+ * el respaldo global (`ATLANTE_COMMISSION_PCT`, 20 % por defecto).
+ */
+export async function commissionPctForVessel(
+  slug: string | null | undefined,
+): Promise<number | null> {
+  if (!slug) return null;
+  const vessel = await getVessel(slug);
+  if (!vessel) return null;
+  const operator = await getOperator(vessel.operatorSlug);
+  return operator?.commissionPct ?? null;
+}

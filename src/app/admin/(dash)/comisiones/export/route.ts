@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { productLabels } from "@/lib/catalog";
+import { slugLabels } from "@/lib/labels";
 import { monthBounds, summarizeCommissions } from "@/lib/commissions";
 import { csvDocument, csvHeaders } from "@/lib/csv";
 
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   let csv: string;
   try {
-    const label = await productLabels();
+    const label = await slugLabels();
     const leads = await db.lead.findMany({
       where: { status: "paid", paidAt: { gte: range.from, lt: range.to } },
       select: { productSlug: true, vesselSlug: true, amount: true, commissionAmount: true },

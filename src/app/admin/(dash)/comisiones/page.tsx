@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { money } from "@/lib/format";
-import { productLabels } from "@/lib/catalog";
+import { slugLabels } from "@/lib/labels";
 import {
   monthBounds,
   recentMonths,
@@ -44,7 +44,7 @@ export default async function AdminComisiones({
   let failed = false;
 
   try {
-    const label = await productLabels();
+    const label = await slugLabels();
     const leads = await db.lead.findMany({
       where: { status: "paid", paidAt: { gte: range.from, lt: range.to } },
       select: {
