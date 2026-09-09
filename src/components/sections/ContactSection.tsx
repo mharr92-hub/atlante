@@ -34,7 +34,6 @@ export default function ContactSection() {
             <a href={whatsappUrl()} target="_blank" rel="noreferrer">
               WhatsApp: {site.whatsapp.display}
             </a>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
             <span>{site.location}</span>
           </div>
         </div>
