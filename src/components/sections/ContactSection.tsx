@@ -3,6 +3,7 @@
 import { site, whatsappUrl } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 export default function ContactSection() {
   const { locale } = useLocale();
@@ -20,6 +21,7 @@ export default function ContactSection() {
       get("group") && `${t("form_group", locale)}: ${get("group")}`,
       get("message") && `${t("form_message", locale)} ${get("message")}`,
     ].filter(Boolean) as string[];
+    track("whatsapp_click", { context: "contact_form" });
     window.open(whatsappUrl(lines.join("\n")), "_blank", "noopener,noreferrer");
   }
 
@@ -31,7 +33,12 @@ export default function ContactSection() {
           <h2>{t("contact_title", locale)}</h2>
           <p style={{ color: "rgba(248,243,232,.8)" }}>{t("contact_body", locale)}</p>
           <div className="contact-lines">
-            <a href={whatsappUrl()} target="_blank" rel="noreferrer">
+            <a
+              href={whatsappUrl()}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => track("whatsapp_click", { context: "contact_section" })}
+            >
               WhatsApp: {site.whatsapp.display}
             </a>
             <span>{site.location}</span>

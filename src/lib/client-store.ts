@@ -33,9 +33,11 @@ export function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`));
   if (!match) return null;
+  const raw = match.slice(name.length + 1);
+  if (!raw.includes("%")) return raw;
   try {
-    return decodeURIComponent(match.slice(name.length + 1));
+    return decodeURIComponent(raw);
   } catch {
-    return null;
+    return raw;
   }
 }

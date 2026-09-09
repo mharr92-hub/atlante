@@ -39,19 +39,20 @@ export function proxy(request: NextRequest) {
       medium: params.get("utm_medium") ?? undefined,
       campaign: params.get("utm_campaign") ?? undefined,
     };
+    // `cookies.set` ya codifica el valor: codificarlo aquí lo dejaría doble.
     if (utm.source || utm.medium || utm.campaign) {
-      response.cookies.set(UTM_COOKIE, encodeURIComponent(JSON.stringify(utm)), options);
+      response.cookies.set(UTM_COOKIE, JSON.stringify(utm), options);
     }
   }
 
   const partner = params.get("partner");
   if (partner && !request.cookies.has(PARTNER_COOKIE)) {
-    response.cookies.set(PARTNER_COOKIE, encodeURIComponent(partner.slice(0, 40)), options);
+    response.cookies.set(PARTNER_COOKIE, partner.slice(0, 40), options);
   }
 
   if (!request.cookies.has(LANDING_COOKIE)) {
     // Sólo la ruta: la query puede llevar cualquier cosa.
-    response.cookies.set(LANDING_COOKIE, encodeURIComponent(request.nextUrl.pathname), options);
+    response.cookies.set(LANDING_COOKIE, request.nextUrl.pathname, options);
   }
 
   return response;

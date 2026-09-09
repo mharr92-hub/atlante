@@ -928,28 +928,9 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.pill-pending,
-.pill-unpaid {
-  background: #fdf0d8;
-  color: #8a5a12;
-}
-.pill-confirmed,
-.pill-paid,
-.pill-available {
+.pill-paid {
   background: #d9f0e3;
   color: #1f6b45;
-}
-.pill-cancelled,
-.pill-expired,
-.pill-blocked,
-.pill-refunded {
-  background: #f6d9d2;
-  color: #a03b25;
-}
-.pill-maintenance,
-.pill-full {
-  background: #e6e2d6;
-  color: #6b6350;
 }
 .admin-actions {
   display: flex;

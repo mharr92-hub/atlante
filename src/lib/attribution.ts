@@ -11,13 +11,22 @@ export interface Attribution {
   landingPath?: string;
 }
 
+/**
+ * Devuelve el valor legible de la cookie. Según por dónde pase, el runtime la
+ * entrega ya decodificada o todavía con `%XX`, así que se decodifica sólo si
+ * hace falta.
+ */
 function decode(raw: string | undefined): string | undefined {
   if (!raw) return undefined;
-  try {
-    return decodeURIComponent(raw).slice(0, 200) || undefined;
-  } catch {
-    return undefined;
+  let value = raw;
+  if (value.includes("%")) {
+    try {
+      value = decodeURIComponent(value);
+    } catch {
+      /* cookie manipulada: se usa tal cual */
+    }
   }
+  return value.slice(0, 200) || undefined;
 }
 
 export async function readAttribution(): Promise<Attribution> {

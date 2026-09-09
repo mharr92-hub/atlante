@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { navItems, site, whatsappUrl } from "@/config/site";
+import { navItems, site } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 
@@ -53,14 +53,11 @@ export default function Header() {
           </button>
         </div>
 
-        <a
-          className="nav-cta"
-          href={whatsappUrl()}
-          target="_blank"
-          rel="noreferrer"
-        >
+        {/* R1: el CTA del header entra al catálogo, no a WhatsApp. Ahora hay un
+            funnel real y WhatsApp queda como canal de rescate (botón flotante). */}
+        <Link className="nav-cta" href="/tours">
           {t("nav_reserve", locale)}
-        </a>
+        </Link>
       </div>
     </header>
   );

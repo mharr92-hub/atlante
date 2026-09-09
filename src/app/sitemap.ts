@@ -1,11 +1,16 @@
 import type { MetadataRoute } from "next";
+import { ticketProducts } from "@/content/catalog";
 import { site } from "@/config/site";
 
 /**
- * Only pages that answer with 200. The six placeholder product pages and
- * `/compare` are 301'd in `next.config.ts`, so they are not listed here.
+ * Sólo páginas que responden 200. Las fichas de productos que PEX no está
+ * vendiendo (`available: false`) devuelven 404, así que no se listan; los seis
+ * productos inventados de antes de R0 siguen redirigidos en `next.config.ts`.
+ *
+ * Las rutas de `/reservar` tampoco entran: son un formulario, no contenido, y
+ * la pantalla de salto a PEX va además con `noindex`.
  */
-const paths: Array<{ path: string; priority: number }> = [
+const staticPaths: Array<{ path: string; priority: number }> = [
   { path: "", priority: 1 },
   { path: "/tours", priority: 0.9 },
   { path: "/charters", priority: 0.9 },
@@ -17,7 +22,12 @@ const paths: Array<{ path: string; priority: number }> = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return paths.map(({ path, priority }) => ({
+
+  const products = ticketProducts
+    .filter((p) => p.available)
+    .map((p) => ({ path: `/tours/${p.slug}`, priority: 0.8 }));
+
+  return [...staticPaths, ...products].map(({ path, priority }) => ({
     url: `${site.url}${path}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
