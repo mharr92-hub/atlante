@@ -6,7 +6,9 @@
 | `TODO-atlante-v2.md` | Lista de 62 tareas priorizadas (T01–T62) |
 | `analisis-broker-2026-09-09.md` | Diagnóstico original del sitio y de PEX (recorrido en vivo del 09/09/2026) |
 | `bloques/00-reglas.md` | Reglas comunes que Claude Code recibe antes de cada bloque |
-| `bloques/01-R0-limpieza.md` … `06-R4-crecimiento.md` | Los 6 bloques de trabajo, en orden |
+| `bloques/01-R0-limpieza.md` … `08-R6-auditoria.md` | Los 8 bloques de trabajo de código, en orden (el 8 es la auditoría completa del código) |
+| `bloques/comercial-chat.md` | Prompts para sesiones de chat (prospección, contenido, Ads, GBP, sesión de PEX); el script no los ejecuta |
+| `TODO-mark.md` | Lo que solo Mark puede hacer (repo privado, Supabase, Vercel, decisiones, PR) |
 | `bloques/anexo-PEX.md` | Cambios que necesita PEX (X1–X9) — se implementan en el repo de PEX, no aquí |
 | `reportes/bloque-XX.md` | Reporte que Claude Code escribe al terminar cada bloque (incluye `PENDIENTE MARK`) |
 

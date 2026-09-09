@@ -1,0 +1,24 @@
+# TODO de Mark — lo que solo tú puedes hacer (Atlante v2)
+
+Fecha: 2026-09-09. Todo lo de código lo hace el script por bloques; esta lista es lo que queda de tu lado, en orden. Cada fila cabe en 5–15 minutos salvo que diga lo contrario.
+
+| # | Cuándo | Tarea | Cómo / dónde | Por qué importa |
+|---|---|---|---|---|
+| M01 | Hoy | Poner el repo `mharr92-hub/atlante` en privado | GitHub → repo → Settings → Danger Zone → Change visibility → Private | Hoy es público y `docs/` cuenta la estrategia completa (Atlante = broker tuyo de PEX, comisiones) |
+| M02 | Hoy | Borrar la regla vieja de `rsync` de tu configuración global de Claude Code | `C:\Users\harri\.claude\settings.json` → `permissions.allow` → quitar la línea que empieza por `"Bash(rsync -a --delete` | Es un permiso amplio de sesiones de PEX; además genera el aviso al arrancar |
+| M03 | Hoy | Decidir y avisarme: comisión Atlante→PEX (20 % por defecto), ferry Taboga activo o pausado, unidad del add-on de Contadora (+$50 por persona o por reserva), logo de PEX en Atlante sí/no, horario de respuesta por WhatsApp que se puede publicar | Un mensaje en el chat; yo actualizo el catálogo/PRD o te doy el cambio exacto | Hoy los bloques usan valores por defecto seguros (ferry oculto, add-on inactivo, sin logo) |
+| M04 | Esta semana | Buzón real de Atlante | Crear `concierge@atlantedelpacifico.lat` (Namecheap → Email / Google Workspace) o usar un Gmail; avisarme para ponerlo en el sitio | Hoy el sitio no muestra email (el anterior apuntaba a un dominio inexistente) |
+| M05 | Esta semana | Dominio `atlantedelpacifico.com`: comprar y redirigir 301 al `.lat`, o dejarlo | Namecheap; si lo compras, apuntarlo a Vercel y añadirlo como dominio con redirect | El sitio y el email lo citaban; el `.com` no resuelve |
+| M06 | Antes de aprobar el bloque 2 | Restaurar Supabase "ATLANTE" (pausado) | supabase.com → proyecto ATLANTE → Restore project (gratis en plan Free) | Sin DB los leads no se guardan; el funnel funciona igual |
+| M07 | Después de M06 | Crear `C:\Users\harri\atlante\.env.local` con `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432), `ADMIN_PASSWORD`, `AUTH_SECRET` (32+ caracteres aleatorios) y volver a correr `atlante-bloques.ps1` | Supabase → Settings → Database → Connection string; el script aplica las migraciones | Activa admin y leads en local |
+| M08 | Después de M07 | Cargar las mismas variables en Vercel (Production + Preview) + `NEXT_PUBLIC_SITE_URL=https://www.atlantedelpacifico.lat` | Vercel → Project → Settings → Environment Variables; las `NEXT_PUBLIC_` van ANTES del deploy (se hornean en build) | Sin esto el deploy de la rama no guarda leads ni abre el admin |
+| M09 | Esta semana | Crear propiedad GA4 y píxel de Meta para Atlante; cargar `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_META_PIXEL_ID` en Vercel | analytics.google.com / Meta Events Manager | Sin IDs no hay medición ni remarketing |
+| M10 | Cuando termine el script | Revisar el Pull Request y aprobar bloque por bloque (o todo) | `https://github.com/mharr92-hub/atlante/compare/main...feature/atlante-broker` → Create pull request → revisar preview de Vercel → Merge | Regla: nada llega a producción sin tu ok |
+| M11 | Después del merge | Search Console: verificar `https://www.atlantedelpacifico.lat`, enviar el sitemap y pedir re-rastreo del home | search.google.com/search-console | Google tenía indexadas reseñas y rating inventados; hay que limpiarlo |
+| M12 | Esta semana | Fotos reales de cada producto y nave (mínimo 8 por nave) | Reutiliza las de PEX (mismo dueño); súbelas a `public/` o pásamelas | Hoy todo usa la misma imagen de portada |
+| M13 | Cuando quieras atribución automática | Sesión de código de PEX con `docs/bloques/anexo-PEX.md` (X1–X5 primero) y crear los dos secretos `PEX_HANDOFF_SECRET` y `PEX_WEBHOOK_SECRET` en Vercel de ambos proyectos | Prompt listo en `docs/bloques/comercial-chat.md` 8.6 | Mientras tanto Atlante funciona en modo puente (el cliente pega el código ATLANTE) |
+| M14 | Cada semana (modo puente) | Conciliar comisiones: export de PEX con `referral_code = ATLANTE` → marcar "pagado" en `/admin/leads` | Admin de Atlante; instrucciones en `docs/OPERACION.md` (bloque 7) | Es la única forma de contar ventas hasta que exista el webhook |
+| M15 | Semana 3–4 | Firmar el contrato de comisión tipo con los primeros operadores aliados y definir su % | Borrador en `docs/comercial/` (bloque 5); razón social y RUC de la entidad que factura (Tanya Engineering / SEDECO / nueva) | Sin entidad no se puede facturar comisiones |
+| M16 | Semana 4 en adelante | Prospección: 5 operadores, hoteles/concierges con código, agencias | Prompts 8.1 y 8.2 en `docs/bloques/comercial-chat.md` | Es donde Atlante gana comisión real |
+| M17 | Mes 2 | Ads y contenido | Prompts 8.3 y 8.4; decidir presupuesto | Requiere M09 |
+| M18 | Opcional | Google Business Profile para Atlante | Prompt 8.5; solo si hay dirección/entidad distinta a PEX | Evitar perfil duplicado |

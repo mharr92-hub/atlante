@@ -8,7 +8,7 @@
    1. Verifica Git, Node, npm y Claude Code (instala Claude Code con npm si falta).
    2. Clona o actualiza el repo mharr92-hub/atlante y crea/actualiza la rama feature/atlante-broker.
    3. Escribe docs/ (PRD v2, TODO, reglas, 6 bloques, anexo PEX), hace commit y push.
-   4. Corre Claude Code bloque por bloque (1 → 6). Al terminar cada bloque: commit de lo que quede,
+   4. Corre Claude Code bloque por bloque (1 → 8). Al terminar cada bloque: commit de lo que quede,
       npm run build (si falla, pide a Claude Code que lo arregle, hasta 2 veces), push, y guarda el
       estado en logs/estado.json para poder reanudar.
    5. Si hay DATABASE_URL en .env.local/.env, aplica las migraciones de Prisma (migrate deploy).
@@ -16,7 +16,7 @@
 
  USO (PowerShell normal, no como administrador):
    Set-ExecutionPolicy -Scope Process Bypass -Force
-   .\atlante-bloques.ps1                    # preparar + bloques 1..6 sin pausas (dejarlo corriendo)
+   .\atlante-bloques.ps1                    # preparar + bloques 1..8 sin pausas (dejarlo corriendo)
    .\atlante-bloques.ps1 -Desde 2 -Hasta 2  # solo el bloque 2
    .\atlante-bloques.ps1 -SoloPreparar      # clona, escribe docs, push; no corre Claude Code
    .\atlante-bloques.ps1 -Pausar            # pausa entre bloques para revisar
@@ -26,7 +26,8 @@
  Reanudar: si se corta, vuelve a ejecutarlo; salta los bloques marcados como completados en
  logs/estado.json (usa -Desde N para forzar).
  Parar con calma: crea el archivo logs\STOP dentro del repo; termina el bloque en curso y se detiene.
- Mientras Claude Code trabaja, imprime una línea de avance cada -Latido segundos (60 por defecto).
+ Por defecto solo imprime una línea al iniciar y otra al terminar cada bloque (como el vigilante de PEX);
+ con -Latido 60 añade una línea de avance cada 60 segundos.
 =====================================================================================================
 #>
 [CmdletBinding()]
@@ -35,14 +36,14 @@ param(
   [string]$RepoUrl = "https://github.com/mharr92-hub/atlante.git",
   [string]$Branch = "feature/atlante-broker",
   [int]$Desde = 0,
-  [int]$Hasta = 6,
+  [int]$Hasta = 8,
   [switch]$SoloPreparar,
   [switch]$Pausar,
   [switch]$Peligroso,
   [switch]$SinBuild,
   [string]$Model = "",
   [int]$MaxTurns = 500,
-  [int]$Latido = 60
+  [int]$Latido = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -120,7 +121,7 @@ function Save-Estado($estado) {
   Write-TextFile $p ($estado | ConvertTo-Json -Depth 5) | Out-Null
 }
 
-function Git-HasChanges { $s = Invoke-Native git @("status", "--porcelain") -Ignore; return [bool]($s | Where-Object { $_ -ne "" }) }
+function Git-HasChanges { $s = Invoke-Native git @("status", "--porcelain") -Ignore; return [bool](@($s | Where-Object { "$_".Trim() -ne "" }).Count -gt 0) }
 function Git-CommitAll([string]$Message) {
   if (-not (Git-HasChanges)) { return $false }
   Invoke-Native git @("add", "-A") | Out-Null
@@ -207,7 +208,9 @@ $Docs["docs/README.md"] = @'
 | `TODO-atlante-v2.md` | Lista de 62 tareas priorizadas (T01–T62) |
 | `analisis-broker-2026-09-09.md` | Diagnóstico original del sitio y de PEX (recorrido en vivo del 09/09/2026) |
 | `bloques/00-reglas.md` | Reglas comunes que Claude Code recibe antes de cada bloque |
-| `bloques/01-R0-limpieza.md` … `06-R4-crecimiento.md` | Los 6 bloques de trabajo, en orden |
+| `bloques/01-R0-limpieza.md` … `08-R6-auditoria.md` | Los 8 bloques de trabajo de código, en orden (el 8 es la auditoría completa del código) |
+| `bloques/comercial-chat.md` | Prompts para sesiones de chat (prospección, contenido, Ads, GBP, sesión de PEX); el script no los ejecuta |
+| `TODO-mark.md` | Lo que solo Mark puede hacer (repo privado, Supabase, Vercel, decisiones, PR) |
 | `bloques/anexo-PEX.md` | Cambios que necesita PEX (X1–X9) — se implementan en el repo de PEX, no aquí |
 | `reportes/bloque-XX.md` | Reporte que Claude Code escribe al terminar cada bloque (incluye `PENDIENTE MARK`) |
 
@@ -647,6 +650,32 @@ Leyenda de "Dónde": Atlante = repo `mharr92-hub/atlante` · PEX = repo de Pacif
 | T62 | CI: Lighthouse móvil ≥ 85 y Playwright e2e del funnel en cada preview | P2 | R4 | Atlante | `.github/workflows/ci.yml` | 1 día | T31 |
 
 Resumen de esfuerzo (sesión de código, Atlante): R0 ≈ 1–2 días · R1 ≈ 6–8 días · R1c ≈ 3–4 días · R2 ≈ 5–6 días · R3 ≈ 1 día · R4 ≈ 5+ días. PEX (R1b) ≈ 3–4 días en la sesión de PEX.
+'@
+$Docs["docs/TODO-mark.md"] = @'
+# TODO de Mark — lo que solo tú puedes hacer (Atlante v2)
+
+Fecha: 2026-09-09. Todo lo de código lo hace el script por bloques; esta lista es lo que queda de tu lado, en orden. Cada fila cabe en 5–15 minutos salvo que diga lo contrario.
+
+| # | Cuándo | Tarea | Cómo / dónde | Por qué importa |
+|---|---|---|---|---|
+| M01 | Hoy | Poner el repo `mharr92-hub/atlante` en privado | GitHub → repo → Settings → Danger Zone → Change visibility → Private | Hoy es público y `docs/` cuenta la estrategia completa (Atlante = broker tuyo de PEX, comisiones) |
+| M02 | Hoy | Borrar la regla vieja de `rsync` de tu configuración global de Claude Code | `C:\Users\harri\.claude\settings.json` → `permissions.allow` → quitar la línea que empieza por `"Bash(rsync -a --delete` | Es un permiso amplio de sesiones de PEX; además genera el aviso al arrancar |
+| M03 | Hoy | Decidir y avisarme: comisión Atlante→PEX (20 % por defecto), ferry Taboga activo o pausado, unidad del add-on de Contadora (+$50 por persona o por reserva), logo de PEX en Atlante sí/no, horario de respuesta por WhatsApp que se puede publicar | Un mensaje en el chat; yo actualizo el catálogo/PRD o te doy el cambio exacto | Hoy los bloques usan valores por defecto seguros (ferry oculto, add-on inactivo, sin logo) |
+| M04 | Esta semana | Buzón real de Atlante | Crear `concierge@atlantedelpacifico.lat` (Namecheap → Email / Google Workspace) o usar un Gmail; avisarme para ponerlo en el sitio | Hoy el sitio no muestra email (el anterior apuntaba a un dominio inexistente) |
+| M05 | Esta semana | Dominio `atlantedelpacifico.com`: comprar y redirigir 301 al `.lat`, o dejarlo | Namecheap; si lo compras, apuntarlo a Vercel y añadirlo como dominio con redirect | El sitio y el email lo citaban; el `.com` no resuelve |
+| M06 | Antes de aprobar el bloque 2 | Restaurar Supabase "ATLANTE" (pausado) | supabase.com → proyecto ATLANTE → Restore project (gratis en plan Free) | Sin DB los leads no se guardan; el funnel funciona igual |
+| M07 | Después de M06 | Crear `C:\Users\harri\atlante\.env.local` con `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432), `ADMIN_PASSWORD`, `AUTH_SECRET` (32+ caracteres aleatorios) y volver a correr `atlante-bloques.ps1` | Supabase → Settings → Database → Connection string; el script aplica las migraciones | Activa admin y leads en local |
+| M08 | Después de M07 | Cargar las mismas variables en Vercel (Production + Preview) + `NEXT_PUBLIC_SITE_URL=https://www.atlantedelpacifico.lat` | Vercel → Project → Settings → Environment Variables; las `NEXT_PUBLIC_` van ANTES del deploy (se hornean en build) | Sin esto el deploy de la rama no guarda leads ni abre el admin |
+| M09 | Esta semana | Crear propiedad GA4 y píxel de Meta para Atlante; cargar `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_META_PIXEL_ID` en Vercel | analytics.google.com / Meta Events Manager | Sin IDs no hay medición ni remarketing |
+| M10 | Cuando termine el script | Revisar el Pull Request y aprobar bloque por bloque (o todo) | `https://github.com/mharr92-hub/atlante/compare/main...feature/atlante-broker` → Create pull request → revisar preview de Vercel → Merge | Regla: nada llega a producción sin tu ok |
+| M11 | Después del merge | Search Console: verificar `https://www.atlantedelpacifico.lat`, enviar el sitemap y pedir re-rastreo del home | search.google.com/search-console | Google tenía indexadas reseñas y rating inventados; hay que limpiarlo |
+| M12 | Esta semana | Fotos reales de cada producto y nave (mínimo 8 por nave) | Reutiliza las de PEX (mismo dueño); súbelas a `public/` o pásamelas | Hoy todo usa la misma imagen de portada |
+| M13 | Cuando quieras atribución automática | Sesión de código de PEX con `docs/bloques/anexo-PEX.md` (X1–X5 primero) y crear los dos secretos `PEX_HANDOFF_SECRET` y `PEX_WEBHOOK_SECRET` en Vercel de ambos proyectos | Prompt listo en `docs/bloques/comercial-chat.md` 8.6 | Mientras tanto Atlante funciona en modo puente (el cliente pega el código ATLANTE) |
+| M14 | Cada semana (modo puente) | Conciliar comisiones: export de PEX con `referral_code = ATLANTE` → marcar "pagado" en `/admin/leads` | Admin de Atlante; instrucciones en `docs/OPERACION.md` (bloque 7) | Es la única forma de contar ventas hasta que exista el webhook |
+| M15 | Semana 3–4 | Firmar el contrato de comisión tipo con los primeros operadores aliados y definir su % | Borrador en `docs/comercial/` (bloque 5); razón social y RUC de la entidad que factura (Tanya Engineering / SEDECO / nueva) | Sin entidad no se puede facturar comisiones |
+| M16 | Semana 4 en adelante | Prospección: 5 operadores, hoteles/concierges con código, agencias | Prompts 8.1 y 8.2 en `docs/bloques/comercial-chat.md` | Es donde Atlante gana comisión real |
+| M17 | Mes 2 | Ads y contenido | Prompts 8.3 y 8.4; decidir presupuesto | Requiere M09 |
+| M18 | Opcional | Google Business Profile para Atlante | Prompt 8.5; solo si hay dirección/entidad distinta a PEX | Evitar perfil duplicado |
 '@
 $Docs["docs/analisis-broker-2026-09-09.md"] = @'
 # Atlante del Pacífico como broker/revendedor de Pacific Experience — análisis y plan de mejoras
@@ -1189,6 +1218,136 @@ Objetivo: SEO de broker (páginas de destino y comparación), sitio completo en 
 
 - `npm run lint && npm run build && npm run test`. Reporte `docs/reportes/bloque-06.md` con capturas o descripción de las 3 rutas clave a 390 px.
 '@
+$Docs["docs/bloques/07-R5-remates.md"] = @'
+# Bloque 7 — R5 · Remates de producto y operación (P1/P2)
+
+Objetivo: cerrar lo que quedó fuera de los bloques 1–6 en la revisión final del PRD. Cada punto es independiente: si uno no aplica todavía (falta un dato de Mark), déjalo preparado detrás de una variable o un `PENDIENTE MARK` y sigue.
+
+1. Salud y monitoreo: `GET /api/health` → `{ ok, db: "ok" | "sin_config" | "error", catalogVerifiedAt, mode: "puente" | "integrado", version: <SHA corto de git en build si está disponible> }`. Sin PII. Úsalo en el admin (resumen) como semáforo.
+2. Páginas de error con marca: `src/app/not-found.tsx` y `src/app/error.tsx` (client) bilingües, con enlaces a `/tours`, `/charters` y WhatsApp. `noindex`.
+3. Landings por ocasión (SEO de broker): `/ocasiones/[slug]` para `cumpleanos`, `despedida-de-soltero`, `corporativo`, `propuesta-de-matrimonio`, `atardecer`: texto breve escrito por ti sin datos inventados + las naves y productos del catálogo que encajen (por capacidad/duración) con precio por persona calculado y CTA. Añadir al sitemap y enlazar desde `/charters`.
+4. Reseñas del operador: componente `OperatorReviews` que, si existe `NEXT_PUBLIC_PEX_GOOGLE_PLACE_ID` (PENDIENTE MARK), muestra un enlace "Ver reseñas del operador en Google" en las fichas de productos y naves de PEX. Sin la variable, no renderiza nada. No inventes rating ni cantidad.
+5. Seguridad del admin: rate-limit en `/admin/login` (5 intentos por 10 min por IP) y cabeceras de seguridad básicas en `next.config.ts` (`X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`). `robots` ya excluye `/admin`.
+6. Correo al cliente (preparado, no activo): `src/lib/mail.ts` con interfaz `sendMail({ to, subject, html })` y proveedor `log` por defecto; plantilla "Recibimos tu solicitud — completa tu pago en Pacific Experience" con el `destinationUrl` y el código ATLANTE, en ES/EN. Se envía solo si `MAIL_PROVIDER` está configurado (PENDIENTE MARK: proveedor; no contrates nada).
+7. Open Graph por producto y nave: imagen OG dinámica (`opengraph-image.tsx` con `ImageResponse`) con nombre, precio "desde" y "Agente autorizado de Pacific Experience"; usa la foto del catálogo si existe, si no un fondo de marca. Título y descripción por página en ES/EN.
+8. Navegación: enlace "Cómo funciona" en header y footer; breadcrumbs en fichas (`/tours › Tour por la Bahía`) con JSON-LD `BreadcrumbList`.
+9. Accesibilidad: recorrido con teclado del funnel completo, `aria-live` en la cuenta regresiva de `/listo`, contraste mínimo AA en botones y badges (revisa el CSS de `.badge`, `.pill`, `.fact`).
+10. Datos y privacidad: endpoint `POST /api/privacy/delete-request` que guarda una solicitud de borrado (email) para que Mark la atienda desde `/admin/leads` (botón "Anonimizar": reemplaza nombre/email/teléfono por `[borrado]`). Enlace desde `/privacidad`.
+11. Documentación operativa: `docs/OPERACION.md` — cómo conciliar comisiones cada semana con el export de PEX (`referral_code = ATLANTE`), cómo activar el ferry Taboga y Contadora (un booleano en el catálogo o en admin), cómo pasar de modo puente a integrado (variables `PEX_FEED_URL`, `PEX_HANDOFF_SECRET`, `PEX_WEBHOOK_SECRET`), cómo añadir una nave aliada.
+12. Verificación: `npm run lint && npm run build && npm run test`; reporte `docs/reportes/bloque-07.md` con la lista de variables nuevas (`NEXT_PUBLIC_PEX_GOOGLE_PLACE_ID`, `MAIL_PROVIDER`) y lo que quedó `PENDIENTE MARK`.
+'@
+$Docs["docs/bloques/08-R6-auditoria.md"] = @'
+# Bloque 8 — R6 · Auditoría completa del código y correcciones (P1)
+
+Origen: auditoría del repo `mharr92-hub/atlante` en `main` (commit `aaa2303`, 09/09/2026) hecha por Claude antes de los bloques. Los bloques 1–7 ya corrigen parte de lo detectado; en cada punto, primero verifica el estado actual del repo y, si ya está resuelto, anótalo como "ya resuelto en bloque N" en el reporte y pasa al siguiente. Nada de este bloque cambia el alcance funcional: es calidad, rendimiento, SEO técnico, seguridad y mantenibilidad.
+
+## A. SEO técnico (impacto alto)
+
+A1. Canonical heredado: `src/app/layout.tsx` define `alternates: { canonical: site.url }` en el layout raíz, así que TODA página sin `alternates` propio declara como canonical el home (legales, `/tours`, `/charters`, `/reservar/*`, etc.) y Google las trata como duplicados del home. Quita `alternates` del layout raíz y define el canonical por página (en `generateMetadata` o `metadata` de cada ruta), siempre con `https://www.atlantedelpacifico.lat` + ruta.
+
+A2. `sitemap.ts` usa `lastModified: new Date()` en cada petición: el sitemap "cambia" siempre y pierde valor. Usa fechas reales: `verifiedAt` del catálogo para productos/naves y una constante por página estática (o la fecha del último commit del archivo).
+
+A3. `metadata.keywords` no lo usa ningún buscador: elimínalo.
+
+A4. Acentos: casi todo el texto en español está sin tildes ("Panama", "Pacifico", "Atlantico", "resenas", "deposito"): 22 apariciones de "Panama" sin tilde y solo 5 archivos con caracteres acentuados. Para una marca premium y para SEO ("Panamá") hay que escribir español correcto. Corrige TODO el copy ES (i18n, catálogo, legales, admin) con tildes y eñes; el nombre de marca queda como Mark lo escriba (PENDIENTE MARK: "Atlante del Pacífico" con tilde en todos lados o no).
+
+A5. JSON-LD: el `TravelAgency` del home debe llevar `sameAs` (Instagram si Mark lo confirma) y `areaServed` (Panamá); los `TouristTrip`/`Product` deben declarar `provider`/`brand` = Pacific Experience. Escapa `<` al serializar (`JSON.stringify(x).replace(/</g, "\\u003c")`) porque desde el bloque 3 hay textos editables en admin que terminan dentro de `<script>`.
+
+A6. Idioma: el HTML se sirve según la cookie `locale` en la MISMA URL, así que Google solo indexa la versión ES y el EN no existe para buscadores. Confirma que el bloque 6 dejó rutas `/en/*` con `hreflang`; si no, hazlo aquí (middleware por prefijo + `metadata.alternates.languages`).
+
+## B. Rendimiento (impacto alto)
+
+B1. Todo el sitio se renderiza dinámicamente en cada petición porque el layout raíz llama a `cookies()` (locale) y las fichas también: ninguna página es estática ni cacheable en CDN, incluido el home. Solución: resolver el idioma en `middleware.ts` (prefijo `/en`) y quitar `cookies()` de layouts/páginas públicas; las páginas públicas pasan a estáticas con `revalidate` (p. ej. 3600) y `generateStaticParams`. Las rutas de admin y APIs siguen dinámicas. Mide antes/después con `next build` (páginas ○/●).
+
+B2. Imágenes: `public/og-atlante.jpg` pesa 397 KB y se usa como hero, galería y OG en todas partes con `<img>` sin tamaños. Usa `next/image` (`fill` + `sizes` en hero con `priority`; `width/height` en tarjetas), formatos AVIF/WebP automáticos, y comprime los originales a ≤ 200 KB. El hero por CSS `background-image` no se optimiza: cámbialo a `<Image fill priority>` con el overlay encima.
+
+B3. CSS: `globals.css` tiene 1.302 líneas hechas a mano y Tailwind v4 importado pero casi sin usar (7 usos de utilidades). Decide una sola vía y documéntala en README: (a) quitar Tailwind y `@tailwindcss/postcss` (menos dependencias, CSS más pequeño) o (b) migrar gradualmente. Elige (a) salvo que ya haya componentes nuevos con utilidades. Elimina las clases muertas (`.review-*`, `.quote`, `.popup-*`, `.urgency`, `.currency-select`, `.stepper`, `.price-*`, `.compare-*`, `.route-map`, `.leaflet-*` si ya no se usan) y añade `@media (prefers-reduced-motion: reduce)` para cualquier animación.
+
+B4. Fuentes: `--font-serif` se usa en 14 sitios pero no hay `@font-face` ni `next/font`: la serif depende de lo que tenga el visitante. Define las fuentes con `next/font` (Google Fonts autoalojadas, sin FOIT) o con archivos locales; `Inter` igual. Sin llamadas a fonts.googleapis en tiempo de ejecución.
+
+B5. Clima: `WeatherWidget` llama a Open-Meteo desde el navegador en cada visita. Crea `GET /api/weather` con `fetch(..., { next: { revalidate: 900 } })` y consume eso; permite una CSP estricta y reduce llamadas a terceros. Si no aporta a la conversión, considera quitarlo (decisión: déjalo, es dato real).
+
+B6. Analítica: Meta Pixel con `strategy="lazyOnload"`; GA4 puede seguir `afterInteractive`. Verifica que sin IDs no se inyecte nada (ya es así).
+
+B7. `Header` fija con listener de scroll: OK (passive). Añade `loading.tsx` en `/tours`, `/charters` y `/reservar/[slug]` para no dejar pantallas en blanco.
+
+B8. Región: en `vercel.json` fija `"regions": ["iad1"]` para que las funciones corran en us-east-1, la misma región que la base de datos de Supabase (latencia de DB mucho menor).
+
+## C. Seguridad (impacto medio-alto)
+
+C1. Cabeceras: `next.config.ts` no envía ninguna. Añade (si el bloque 7 no lo hizo): `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` mínima, y una `Content-Security-Policy` en modo `Report-Only` primero (permitir GA4, Meta, Open-Meteo/`/api/weather`, wa.me) — los estilos inline (`style={{…}}`, 29 usos) impiden una CSP estricta: ver D2.
+
+C2. Admin: sesión HMAC con `AUTH_SECRET` (bien). Añade: rate-limit en login (bloque 7), `AUTH_SECRET` mínimo 32 bytes validado al arrancar (log de aviso si es corto), y una variable `SESSION_VERSION` incluida en la firma para poder cerrar todas las sesiones cambiándola. Cookie `secure` solo en producción (ya está).
+
+C3. Errores: la API antigua devolvía `e.message` al cliente. Regla para todas las rutas nuevas: mensajes genéricos al cliente (`{ ok:false, error:"internal" }`) y detalle solo en `console.error` del servidor. Revisa `/api/leads`, `/api/handoff`, `/api/pex/*`, `/api/partner-applications`.
+
+C4. `GET /api/handoff/[token]` y `POST /api/pex/booking-confirmed`: comparación de secretos con `timingSafeEqual`, `Cache-Control: no-store`, sin registrar el token completo (solo 6 primeros caracteres), y `Content-Type` estricto. Verifica que el rate-limit en memoria no rompa en serverless (cada instancia tiene su memoria: aceptable, documenta el límite).
+
+C5. Datos personales: define retención en `/privacidad` (p. ej. anonimizar leads a los 12 meses) y añade al cron de housekeeping (bloque 3) la anonimización de leads con más de 365 días (`name/email/phone` → `[borrado]`, conservando estado y montos para el reporte).
+
+C6. Repositorio público: `docs/` y el historial de git son visibles. Recomendación para Mark (ya en TODO-mark M01): repo privado. En código: asegúrate de que ningún secreto ni URL con credenciales esté en el historial (`git log -p | grep -i "postgres://"` = 0) y deja `.env.example` como único archivo de entorno versionado.
+
+## D. Calidad de código y mantenibilidad
+
+D1. Idioma en tres sitios distintos (cookie en servidor, contexto en cliente, `navigator.language` al montar): produce parpadeo ES→EN y riesgo de errores de hidratación. Con el middleware de B1 el idioma viene de la URL y el contexto solo lo lee; elimina la detección por `navigator.language` (o úsala solo para sugerir "View in English" una vez).
+
+D2. Estilos inline (`style={{…}}`, 29 usos) repartidos por componentes: muévelos a clases en `globals.css` (o utilidades) para consistencia y para poder activar CSP.
+
+D3. Diccionario `i18n.ts` monolítico: divídelo por dominio (`common`, `home`, `funnel`, `admin`, `legal`) manteniendo `t()` tipado; elimina las claves muertas y las duplicadas con expresiones `locale === "es" ? … : …` repartidas por los componentes (todas deben pasar por el diccionario).
+
+D4. Fecha y zona horaria: el código construye fechas con `T00:00:00.000Z` (UTC). Panamá es UTC-5 sin horario de verano: centraliza en `src/lib/dates.ts` (`todayInPanama()`, `formatDatePa()`, `TZ = "America/Panama"`) y úsalo en el calendario del funnel, en el admin y en el housekeeping, para que "hoy" y "mañana" sean los de Panamá y no los del visitante.
+
+D5. Dinero: `money()` redondea a 0 decimales por defecto; los precios por persona calculados (86.67, 67.25) deben mostrar 2 decimales cuando no son enteros. Añade tests.
+
+D6. Prisma: modelos muertos (`Customer`, `Payment`, `Coupon`, `GiftCard`, `Review`, `AvailabilitySlot`, `Booking`) tras el bloque 2. Crea una migración `drop_legacy` SOLO si `/admin` y los tests no los usan y anótalo como decisión reversible; si prefieres conservarlos, documenta en `docs/OPERACION.md` que no se usan. Corrige el smell de `AvailabilitySlot.timeSlot` nulo en clave única si el modelo se conserva. Sustituye `package.json#prisma` por `prisma.config.ts` (Prisma 6.19 lo avisa).
+
+D7. Dependencias: quita `leaflet`, `react-leaflet`, `@types/leaflet` si el mapa se eliminó; añade `"engines": { "node": ">=20" }` y `.nvmrc` = `22`; `npm audit` sin vulnerabilidades altas; `npm outdated` documentado en el reporte (sin subir de versión mayor de Next sin pedirlo).
+
+D8. Configuración: `next.config.ts` con `poweredByHeader: false`, `images.formats: ["image/avif","image/webp"]`, `headers()` (C1) y `redirects()` (bloque 1). `tsconfig` `target` a `ES2022`. Prettier + `npm run format:check` en CI.
+
+D9. Manejo de errores y observabilidad: `error.tsx`/`not-found.tsx` (bloque 7), `console.error` estructurado (`{ scope, msg, leadId }`) y `/api/health`. Sin contratar servicios: deja preparado un `src/lib/report-error.ts` con proveedor `console` y punto único para enchufar Sentry u otro (PENDIENTE MARK).
+
+D10. Tests y CI: cobertura mínima obligatoria: `buildPexUrl`, cálculo de totales del funnel, precio por persona de naves, firma del webhook, `dates.ts`, `money()`. `npm run lint && npm run test && npm run build` en CI para cada push (bloque 6); añade `npm run check:pex-links` y un job de Lighthouse no bloqueante.
+
+D11. Accesibilidad: `aria-pressed` en el selector ES/EN, `:focus-visible` visible en botones y enlaces, enlace "Saltar al contenido", contraste ≥ 4.5:1 en `.fact`, `.card-body-text`, textos `rgba(10,36,33,.55)` y badges; `aria-live="polite"` en la cuenta regresiva de `/listo`; inputs con `<label>` (no solo placeholder). Recorrido completo con teclado del funnel.
+
+D12. README y docs: README con arquitectura real (rutas, catálogo, modo puente/integrado, variables), y `docs/OPERACION.md` (bloque 7) enlazado.
+
+## E. Verificación del bloque
+
+- `npm run lint && npm run build && npm run test`; en el reporte incluye la tabla de páginas del build (estáticas vs dinámicas) antes y después de B1, el peso del CSS y del JS del home antes y después (B2–B4), y el resultado de `npm audit`.
+- `grep -rn "alternates" src/app/layout.tsx` sin canonical global; `grep -rho "Panama\b" src | wc -l` = 0 (todo con tilde) salvo nombres propios que Mark decida.
+- Reporte `docs/reportes/bloque-08.md` con: hallazgos ya resueltos por bloques anteriores, cambios por archivo, métricas antes/después y `PENDIENTE MARK` (tilde en la marca, Instagram, proveedor de errores, retención de datos).
+'@
+$Docs["docs/bloques/comercial-chat.md"] = @'
+# Comercial y contenido (NO lo ejecuta el script: son prompts para sesiones de chat con Claude)
+
+Estos trabajos no son código. Cuando quieras hacerlos, abre una sesión de chat en el proyecto "atlante del pacific" y pega el prompt correspondiente. Cada uno produce entregables en tabla copiable.
+
+## 8.1 Prospección de operadores de charter (T56)
+
+> Con base en `02-PRD-atlante-v2.md` (sección 6, alianzas) arma una lista de 20 operadores de charter, yates, lanchas y veleros en Ciudad de Panamá, Amador, Taboga y Las Perlas que NO sean Pacific Experience, con: nombre, tipo de embarcación, capacidad, zona, WhatsApp/Instagram/web, precio público si lo publican, y fuente. Marca NO ENCONTRADO donde falte. Luego redacta el mensaje de primer contacto por WhatsApp (ES) para ofrecerles ficha en Atlante con comisión "según acuerdo" y el enlace a `/aliados`.
+
+## 8.2 Hoteles, concierges y agencias (T56)
+
+> Reutiliza la base de ~62 prospectos B2B ya compilada para PEX (agencias y DMC) y arma la versión para Atlante: mensaje de presentación del código de aliado (`?partner=CODE`), qué gana el hotel, y un calendario de 4 semanas de seguimiento. Tabla: prospecto, contacto, canal, fecha de envío, estado.
+
+## 8.3 Guías de contenido (T59) — 2 por mes
+
+> Escribe la guía "Ferry o charter a Taboga: cuál conviene según tu grupo" (ES, 900–1200 palabras) usando SOLO los precios y horarios del catálogo de Atlante (`docs/PRD-atlante-v2.md` 5.6/5.7), con una tabla comparativa y CTAs a `/tours/ferry-taboga` y `/charters`. Sin usar la palabra "Sunset". Después la versión EN. Repetir con: "Cuánto cuesta un yate por persona en Panamá" y "Mejor mes para ir a Las Perlas" (esta última sin datos climáticos inventados: solo lo que el catálogo y PEX publican).
+
+## 8.4 Reparto de Ads Atlante vs PEX (T60)
+
+> Diseña el plan de Google Ads y Meta para Atlante de modo que no compita con PEX: Atlante puja por términos de comparación y charter ("alquiler de yate Panamá precios", "mejores charters Panamá", "comparar tours Taboga", "yate para cumpleaños Panamá", "charter Las Perlas"); PEX se queda con marca + producto ("ferry Taboga", "tour bahía"). Entrega: tabla de campañas, grupos de anuncios, palabras clave, negativas cruzadas, presupuesto inicial sugerido (en blanco para que Mark lo fije) y la audiencia de remarketing "redirect_to_pex sin purchase".
+
+## 8.5 Google Business Profile (T61)
+
+> Explica en 10 líneas si conviene crear un perfil de Google Business para Atlante teniendo en cuenta que PEX ya tiene uno en Marina Flamenco y que Google prohíbe perfiles duplicados del mismo negocio en la misma dirección. Si conviene, checklist de creación con categoría, dirección/área de servicio y qué NO poner.
+
+## 8.6 Sesión de PEX (X1–X9)
+
+> Pega `docs/bloques/anexo-PEX.md` en la sesión de código de PEX con este encabezado: "Implementa X1–X5 (P0) en la rama feature/atlante-attribution del repo de PEX, sin merge ni deploy. Los secretos PEX_HANDOFF_SECRET y PEX_WEBHOOK_SECRET los defino yo; deja placeholders en .env.example".
+'@
 $Docs["docs/bloques/anexo-PEX.md"] = @'
 # Anexo — Cambios que requiere Pacific Experience (para la sesión de código de PEX, NO para este repo)
 
@@ -1210,6 +1369,8 @@ Secretos a acordar entre ambos proyectos (Mark los crea y los carga en Vercel de
 '@
 $written = 0
 foreach ($k in $Docs.Keys) { if (Write-TextFile (Join-Path $RepoDir $k) $Docs[$k]) { $written++ } }
+# archivos de versiones anteriores del plan que ya no deben existir
+foreach ($stale in @("docs/bloques/08-comercial-chat.md")) { $sp = Join-Path $RepoDir $stale; if (Test-Path $sp) { Remove-Item $sp -Force; $written++ } }
 New-Item -ItemType Directory -Path (Join-Path $RepoDir "docs/reportes") -Force | Out-Null
 Write-TextFile (Join-Path $RepoDir "docs/reportes/.gitkeep") "" | Out-Null
 try {
@@ -1296,12 +1457,13 @@ function Invoke-Claude([string]$Prompt, [string]$LogPath, [string]$Task, [string
   while (-not $p.HasExited) {
     Start-Sleep -Seconds 1
     $seg = [int]((Get-Date) - $inicio).TotalSeconds
-    if ($seg - $ultimo -ge $Latido) {
+    if ($Latido -gt 0 -and ($seg - $ultimo) -ge $Latido) {
       $ultimo = $seg
       $kb = 0; try { $kb = [int]((Get-Item $LogPath).Length / 1KB) } catch {}
       $commits = ((Invoke-Native git @("rev-list", "--count", "HEAD") -Ignore) -join "").Trim()
       $nuevos = 0; try { $nuevos = [int]$commits - [int]$commits0 } catch {}
-      $cambios = @(Invoke-Native git @("status", "--porcelain") -Ignore | Where-Object { $_ -ne "" }).Count
+      $st = Invoke-Native git @("status", "--porcelain") -Ignore
+      $cambios = @($st | Where-Object { "$_".Trim() -ne "" }).Count
       Write-Linea ("  … " + $Etiqueta + " en curso · " + [int]($seg / 60) + " min · log " + $kb + " KB · commits nuevos: " + $nuevos + " · archivos modificados sin commit: " + $cambios)
       if (Test-Path (Join-Path $RepoDir "logs/STOP")) { Write-Linea "  logs/STOP encontrado: se espera a que termine este bloque y se detiene." }
     }
@@ -1314,7 +1476,7 @@ function Invoke-Claude([string]$Prompt, [string]$LogPath, [string]$Task, [string
 }
 
 function Get-BloqueFile([int]$N) {
-  $pattern = ("{0:00}-*.md" -f $N)
+  $pattern = ("{0:00}-R*.md" -f $N)
   $f = Get-ChildItem (Join-Path $RepoDir "docs/bloques") -Filter $pattern | Select-Object -First 1
   if (-not $f) { throw "No encuentro docs/bloques/$pattern" }
   return $f.FullName
@@ -1336,9 +1498,9 @@ function Invoke-Bloque([int]$N) {
   $bloque = Get-Content $bloqueFile -Raw -Encoding UTF8
   $stamp = (Get-Date).ToString("yyyyMMdd-HHmm")
   $log = Join-Path $RepoDir ("logs/bloque-{0:00}-{1}.log" -f $N, $stamp)
-  Write-Step ("Bloque $N/6 · " + (Split-Path -Leaf $bloqueFile) + "  (log: logs\" + (Split-Path -Leaf $log) + ")")
+  Write-Step ("Bloque $N/8 · " + (Split-Path -Leaf $bloqueFile) + "  (log: logs\" + (Split-Path -Leaf $log) + ")")
 
-  $prompt = $reglas + "`n`n---`n`n" + $bloque + "`n`n---`n`nContexto de ejecución: hoy es " + (Get-Date).ToString("yyyy-MM-dd") + ". Rama: $Branch. Este es el bloque $N de 6; los reportes anteriores están en docs/reportes/. Ejecuta TODO el bloque de principio a fin sin pedir confirmación. Al final, haz commit (sin push)."
+  $prompt = $reglas + "`n`n---`n`n" + $bloque + "`n`n---`n`nContexto de ejecución: hoy es " + (Get-Date).ToString("yyyy-MM-dd") + ". Rama: $Branch. Este es el bloque $N de 8; los reportes anteriores están en docs/reportes/. Ejecuta TODO el bloque de principio a fin sin pedir confirmación. Al final, haz commit (sin push)."
   $task = "Ejecuta íntegramente el bloque de trabajo que recibes por stdin (reglas comunes + bloque $N). No preguntes: no hay nadie mirando. Termina con commit y el reporte en docs/reportes/bloque-{0:00}.md." -f $N
   $code = Invoke-Claude $prompt $log $task ("bloque " + $N + " · " + (Split-Path -Leaf $bloqueFile))
   if ($code -ne 0) { Write-Warn2 "claude terminó con código $code (se continúa igual: se revisa el estado del repo)" }
@@ -1402,5 +1564,5 @@ Write-Step "6/6 · Siguiente paso (manual, tú decides)"
 Write-Host " Nada se ha mezclado a main ni desplegado. Revisa la rama y abre el Pull Request:" -ForegroundColor Green
 Write-Host "   $Script:CompareUrl"
 Write-Host " Vercel construye un preview de la rama automáticamente si el proyecto está conectado a GitHub."
-Write-Host " Cambios que requiere PEX (otra sesión): docs\bloques\anexo-PEX.md"
+Write-Host " Tu lista: docs\TODO-mark.md · Comercial (chat): docs\bloques\comercial-chat.md · Cambios en PEX (otra sesión): docs\bloques\anexo-PEX.md"
 Write-Host " Logs: $RepoDir\logs\"
