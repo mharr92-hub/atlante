@@ -3,12 +3,12 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { Tour } from "@/content/tours";
-import { site } from "@/config/site";
+import { site, whatsappUrl } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
 import { L, t } from "@/lib/i18n";
 import Badges from "@/components/tour/Badges";
 import WeatherWidget from "@/components/tour/WeatherWidget";
-import PriceCalculator from "@/components/tour/PriceCalculator";
+import PexDisclosure from "@/components/site/PexDisclosure";
 
 // Leaflet touches window, so load the map client-side only.
 const RouteMap = dynamic(() => import("@/components/tour/RouteMap"), {
@@ -111,9 +111,45 @@ export default function TourDetail({ tour }: { tour: Tour }) {
             </div>
           </div>
 
-          <PriceCalculator tour={tour} />
+          <ConsultPanel tour={tour} />
         </div>
       </section>
     </>
+  );
+}
+
+/**
+ * R0 panel: no price, no deposit, no form. The catalog is still placeholder
+ * data, and Atlante never charges — the only close here is a WhatsApp question.
+ * Block 2 replaces this with the real product panel.
+ */
+function ConsultPanel({ tour }: { tour: Tour }) {
+  const { locale } = useLocale();
+  const waMsg =
+    locale === "es"
+      ? `Hola Atlante, quiero consultar por ${L(tour.name, "es")}.`
+      : `Hi Atlante, I'd like to ask about ${L(tour.name, "en")}.`;
+
+  return (
+    <aside className="book-panel">
+      <div className="price-sub">{L(tour.duration, locale)}</div>
+      <p style={{ marginTop: 12, fontSize: 15, color: "rgba(10,36,33,.75)" }}>
+        {locale === "es"
+          ? "Te confirmamos disponibilidad y el precio del operador por WhatsApp."
+          : "We confirm availability and the operator's price over WhatsApp."}
+      </p>
+      <a
+        className="button button-primary"
+        style={{ width: "100%", marginTop: 16 }}
+        href={whatsappUrl(waMsg)}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t("consult_whatsapp", locale)}
+      </a>
+      <div style={{ marginTop: 18, borderTop: "1px solid rgba(10,36,33,.14)", paddingTop: 16 }}>
+        <PexDisclosure variant="inline" tone="light" />
+      </div>
+    </aside>
   );
 }

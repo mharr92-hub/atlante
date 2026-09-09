@@ -48,18 +48,14 @@ export default async function TourPage({
   const cookieStore = await cookies();
   const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
 
+  // No `offers`: the price in the catalog is placeholder data. A JSON-LD offer
+  // only ships once the price comes from the operator (block 2).
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TouristTrip",
     name: L(tour.name, locale),
     description: L(tour.description, locale),
     touristType: tour.badges,
-    offers: {
-      "@type": "Offer",
-      price: tour.pricing.priceFrom,
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
     provider: { "@type": "TravelAgency", name: site.name, url: site.url },
   };
 

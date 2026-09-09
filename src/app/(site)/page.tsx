@@ -6,6 +6,7 @@ import Destinations from "@/components/sections/Destinations";
 import About from "@/components/sections/About";
 import FaqSection from "@/components/sections/FaqSection";
 import ContactSection from "@/components/sections/ContactSection";
+import PexDisclosure from "@/components/site/PexDisclosure";
 import { site } from "@/config/site";
 
 // Only verifiable facts: no rating, no review count, no email until Mark has a
@@ -31,12 +32,12 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero />
+      <PexDisclosure variant="banner" />
       <ValueProps />
       <ToursSection />
       <ChartersSection />
       <Destinations />
       <About />
-      <ReviewsSection />
       <FaqSection />
       <ContactSection />
     </>
