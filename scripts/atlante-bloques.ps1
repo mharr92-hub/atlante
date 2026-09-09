@@ -25,6 +25,8 @@
 
  Reanudar: si se corta, vuelve a ejecutarlo; salta los bloques marcados como completados en
  logs/estado.json (usa -Desde N para forzar).
+ Parar con calma: crea el archivo logs\STOP dentro del repo; termina el bloque en curso y se detiene.
+ Mientras Claude Code trabaja, imprime una línea de avance cada -Latido segundos (60 por defecto).
 =====================================================================================================
 #>
 [CmdletBinding()]
@@ -39,7 +41,8 @@ param(
   [switch]$Peligroso,
   [switch]$SinBuild,
   [string]$Model = "",
-  [int]$MaxTurns = 500
+  [int]$MaxTurns = 500,
+  [int]$Latido = 60
 )
 
 $ErrorActionPreference = "Stop"
@@ -1261,17 +1264,52 @@ function Invoke-DbMigrate {
 # ----------------------------------------------------------------------------------------------------
 $AllowedTools = "Read,Edit,MultiEdit,Write,Glob,Grep,LS,WebFetch,WebSearch,TodoWrite,Bash(npm:*),Bash(npx:*),Bash(node:*),Bash(git:*),Bash(dir:*),Bash(type:*),Bash(findstr:*),Bash(where:*),Bash(mkdir:*),Bash(copy:*),Bash(move:*),Bash(ren:*),Bash(del:*),Bash(rmdir:*),Bash(echo:*),Bash(cat:*),Bash(ls:*),Bash(cp:*),Bash(mv:*),Bash(rm:*),Bash(grep:*),Bash(find:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(sed:*),Bash(pwd:*),Bash(test:*),Bash(true:*)"
 
-function Invoke-Claude([string]$Prompt, [string]$LogPath, [string]$Task) {
-  $args = @("-p", $Task, "--output-format", "text", "--max-turns", "$MaxTurns")
-  if ($Peligroso) { $args += "--dangerously-skip-permissions" } else { $args += @("--permission-mode", "acceptEdits", "--allowedTools", $AllowedTools) }
+function Write-Linea([string]$Text) { Write-Host ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + "  " + $Text) }
+
+function Get-ClaudeExe {
+  $cmd = Get-Command claude -ErrorAction SilentlyContinue
+  if (-not $cmd) { throw "claude no está en el PATH" }
+  $src = $cmd.Source
+  if ($src -and $src.ToLower().EndsWith(".ps1")) {
+    $alt = [System.IO.Path]::ChangeExtension($src, ".cmd")
+    if (Test-Path $alt) { return $alt }
+  }
+  return $src
+}
+
+function Invoke-Claude([string]$Prompt, [string]$LogPath, [string]$Task, [string]$Etiqueta) {
+  # Corre Claude Code en segundo plano con el prompt por stdin y escribe su salida al log;
+  # mientras tanto imprime una línea de latido cada $Latido segundos (como el vigilante de PEX).
+  $promptFile = Join-Path $RepoDir ("logs/prompt-" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".txt")
+  [System.IO.File]::WriteAllText($promptFile, $Prompt, $Script:Utf8NoBom)
+  $args = @("-p", ('"' + $Task.Replace('"', "'") + '"'), "--output-format", "text", "--max-turns", "$MaxTurns")
+  if ($Peligroso) { $args += "--dangerously-skip-permissions" } else { $args += @("--permission-mode", "acceptEdits", "--allowedTools", ('"' + $AllowedTools + '"')) }
   if ($Model) { $args += @("--model", $Model) }
-  Add-Content -Path $LogPath -Value ("`n===== " + (Get-Date).ToString("s") + " · claude " + ($args -join " ") + "`n") -Encoding UTF8
-  $eap = $ErrorActionPreference
-  try {
-    $ErrorActionPreference = "Continue"
-    $Prompt | & claude @args 2>&1 | ForEach-Object { $line = "$_"; Write-Host $line; Add-Content -Path $LogPath -Value $line -Encoding UTF8 }
-    $code = $LASTEXITCODE
-  } finally { $ErrorActionPreference = $eap }
+  $errLog = [System.IO.Path]::ChangeExtension($LogPath, ".err.log")
+  Add-Content -Path $LogPath -Value ("===== " + (Get-Date).ToString("s") + " · claude " + ($args -join " ")) -Encoding UTF8
+  $exe = Get-ClaudeExe
+  $inicio = Get-Date
+  $commits0 = ((Invoke-Native git @("rev-list", "--count", "HEAD") -Ignore) -join "").Trim()
+  Write-Linea ("▶ Ejecutando " + $Etiqueta + "  (log: logs/" + (Split-Path -Leaf $LogPath) + ")")
+  $p = Start-Process -FilePath $exe -ArgumentList $args -WorkingDirectory $RepoDir -RedirectStandardInput $promptFile -RedirectStandardOutput $LogPath -RedirectStandardError $errLog -NoNewWindow -PassThru
+  $ultimo = 0
+  while (-not $p.HasExited) {
+    Start-Sleep -Seconds 1
+    $seg = [int]((Get-Date) - $inicio).TotalSeconds
+    if ($seg - $ultimo -ge $Latido) {
+      $ultimo = $seg
+      $kb = 0; try { $kb = [int]((Get-Item $LogPath).Length / 1KB) } catch {}
+      $commits = ((Invoke-Native git @("rev-list", "--count", "HEAD") -Ignore) -join "").Trim()
+      $nuevos = 0; try { $nuevos = [int]$commits - [int]$commits0 } catch {}
+      $cambios = @(Invoke-Native git @("status", "--porcelain") -Ignore | Where-Object { $_ -ne "" }).Count
+      Write-Linea ("  … " + $Etiqueta + " en curso · " + [int]($seg / 60) + " min · log " + $kb + " KB · commits nuevos: " + $nuevos + " · archivos modificados sin commit: " + $cambios)
+      if (Test-Path (Join-Path $RepoDir "logs/STOP")) { Write-Linea "  logs/STOP encontrado: se espera a que termine este bloque y se detiene." }
+    }
+  }
+  $p.WaitForExit()
+  $code = $p.ExitCode
+  Add-Content -Path $LogPath -Value ("===== fin claude · exit " + $code + " · " + (Get-Date).ToString("s")) -Encoding UTF8
+  try { Remove-Item $promptFile -ErrorAction SilentlyContinue } catch {}
   return $code
 }
 
@@ -1302,7 +1340,7 @@ function Invoke-Bloque([int]$N) {
 
   $prompt = $reglas + "`n`n---`n`n" + $bloque + "`n`n---`n`nContexto de ejecución: hoy es " + (Get-Date).ToString("yyyy-MM-dd") + ". Rama: $Branch. Este es el bloque $N de 6; los reportes anteriores están en docs/reportes/. Ejecuta TODO el bloque de principio a fin sin pedir confirmación. Al final, haz commit (sin push)."
   $task = "Ejecuta íntegramente el bloque de trabajo que recibes por stdin (reglas comunes + bloque $N). No preguntes: no hay nadie mirando. Termina con commit y el reporte en docs/reportes/bloque-{0:00}.md." -f $N
-  $code = Invoke-Claude $prompt $log $task
+  $code = Invoke-Claude $prompt $log $task ("bloque " + $N + " · " + (Split-Path -Leaf $bloqueFile))
   if ($code -ne 0) { Write-Warn2 "claude terminó con código $code (se continúa igual: se revisa el estado del repo)" }
 
   if (Git-CommitAll ("Bloque {0}: cierre automático (archivos pendientes de commit)" -f $N)) { Write-Ok "commit de cierre" }
@@ -1313,7 +1351,7 @@ function Invoke-Bloque([int]$N) {
     $intentos++
     Write-Warn2 "Pidiendo a Claude Code que arregle el build (intento $intentos de 2)"
     $fix = $reglas + "`n`n---`n`n" + ('El comando "npm run build" falló en la rama ' + $Branch + ' después del bloque ' + $N + '. Últimas líneas de la salida:') + "`n`n" + $Script:LastBuildOutput + "`n`n" + 'Arregla el error sin cambiar el alcance del bloque, vuelve a correr "npm run lint" y "npm run build" hasta que pasen, y haz commit.'
-    Invoke-Claude $fix $log "Arregla el build roto según las instrucciones que recibes por stdin. No preguntes." | Out-Null
+    Invoke-Claude $fix $log "Arregla el build roto según las instrucciones que recibes por stdin. No preguntes." ("bloque " + $N + " · corrección de build " + $intentos) | Out-Null
     Git-CommitAll ("Bloque {0}: corrección de build" -f $N) | Out-Null
     $ok = Invoke-Build $log
   }
@@ -1321,6 +1359,8 @@ function Invoke-Bloque([int]$N) {
 
   Invoke-DbMigrate
   Git-Push | Out-Null
+  $rep = "docs/reportes/bloque-{0:00}.md" -f $N
+  if (Test-Path (Join-Path $RepoDir $rep)) { Write-Linea ("✔ Terminada: bloque " + $N + " → " + $rep) } else { Write-Linea ("✔ Terminada: bloque " + $N + " (sin reporte en " + $rep + ")") }
 
   $estado = Get-Estado
   $done = @($estado.completados | ForEach-Object { [int]$_ })
@@ -1346,6 +1386,7 @@ for ($n = $inicio; $n -le $Hasta; $n++) {
   if ($Desde -eq 0 -and $completados -contains $n) { Write-Host " Bloque $n ya completado (logs/estado.json) — saltando. Usa -Desde $n para repetirlo." -ForegroundColor DarkGray; $resultados["$n"] = "ya hecho"; continue }
   $r = Invoke-Bloque $n
   $resultados["$n"] = if ($r) { "OK" } else { "build con errores" }
+  if (Test-Path (Join-Path $RepoDir "logs/STOP")) { Write-Linea "logs/STOP encontrado: me detengo aquí (bórralo para continuar en la próxima corrida)."; Remove-Item (Join-Path $RepoDir "logs/STOP") -ErrorAction SilentlyContinue; break }
   if ($Pausar -and $n -lt $Hasta) { Read-Host " Bloque $n terminado. Enter para continuar con el bloque $($n + 1) (Ctrl+C para parar)" | Out-Null }
 }
 
