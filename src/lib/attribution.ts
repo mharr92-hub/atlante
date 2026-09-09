@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { LANDING_COOKIE, PARTNER_COOKIE, UTM_COOKIE } from "@/proxy";
+import { LANDING_COOKIE, PARTNER_COOKIE, UTM_COOKIE } from "@/lib/attribution-cookies";
 
 /** Lo que `src/proxy.ts` guardó en la primera visita. */
 export interface Attribution {

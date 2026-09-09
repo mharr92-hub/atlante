@@ -156,6 +156,8 @@ export const dict = {
     en: "The ticket is open: you do not pick a time when buying.",
   },
   choose_time: { es: "Elige el horario", en: "Pick a time" },
+  label_date: { es: "Fecha", en: "Date" },
+  label_time: { es: "Horario", en: "Time" },
   passengers: { es: "Pasajeros", en: "Passengers" },
   addons_title: { es: "Adicionales", en: "Add-ons" },
   addon_unit_pending: {

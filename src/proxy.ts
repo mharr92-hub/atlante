@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  ATTRIBUTION_MAX_AGE,
+  LANDING_COOKIE,
+  PARTNER_COOKIE,
+  UTM_COOKIE,
+} from "@/lib/attribution-cookies";
 
 /**
  * Atribución de la primera visita.
@@ -15,18 +21,12 @@ import type { NextRequest } from "next/server";
  * `proxy`; la función exportada es `proxy`.
  */
 
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
-
-export const UTM_COOKIE = "atl_utm";
-export const PARTNER_COOKIE = "atl_partner";
-export const LANDING_COOKIE = "atl_landing";
-
 export function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const params = request.nextUrl.searchParams;
 
   const options = {
-    maxAge: THIRTY_DAYS,
+    maxAge: ATTRIBUTION_MAX_AGE,
     path: "/",
     sameSite: "lax" as const,
     httpOnly: false,

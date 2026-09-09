@@ -30,8 +30,9 @@ export function minPax(product: Product): number {
   return product.capacityMin ?? 1;
 }
 
+/** Tope del funnel: la capacidad publicada por PEX manda; si no, 20. */
 export function maxPax(product: Product): number {
-  return Math.min(product.capacityMax ?? MAX_PAX, Math.max(product.capacityMin ?? 0, MAX_PAX));
+  return product.capacityMax ?? MAX_PAX;
 }
 
 export function activeAddons(product: Product): ProductAddon[] {
