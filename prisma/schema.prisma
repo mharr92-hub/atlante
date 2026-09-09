@@ -269,6 +269,11 @@ model Lead {
   /// Slugs de adicionales seleccionados.
   addons      Json?
 
+  /// Charters (R2): jornada pedida, en horas (4, 8, 12).
+  hours    Int?
+  /// Charters (R2): clave de ocasión (cumpleanos, despedida, corporativo…).
+  occasion String?
+
   name  String
   email String
   phone String
@@ -444,6 +449,8 @@ model ProductSlot {
 /// Alta self-service de operadores de charter (marketplace, bloque 4/R2).
 model PartnerApplication {
   id         String   @id @default(cuid())
+  /// operator | hotel | agency — las tres propuestas de `/aliados`.
+  kind       String   @default("operator")
   name       String
   vesselName String?
   capacity   Int?
@@ -451,6 +458,96 @@ model PartnerApplication {
   whatsapp   String
   email      String?
   photos     Json?
+  message    String?
   status     String   @default("new")
   createdAt  DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+// ============================================================================
+// R2 — marketplace de charters
+//
+// `Operator` es quien opera y cobra la nave (hoy sólo Pacific Experience);
+// `Vessel` es la ficha pública. `src/lib/vessels.ts` lee de aquí cuando hay
+// filas y cae a `src/content/vessels.ts` cuando no (regla 9).
+//
+// `commissionPct`, `contractSignedAt`, `ampLicense` e `insuranceUntil` son
+// internos: nunca se muestran en público. El sello "Operador verificado" sólo
+// aparece con licencia AMP, seguro vigente y contrato firmado.
+// ============================================================================
+
+/// Operador de las naves del marketplace. `pex` es el primer registro.
+model Operator {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  name     String
+  whatsapp String?
+  email    String?
+
+  commissionPct    Decimal?  @db.Decimal(5, 2)
+  contractSignedAt DateTime? @db.Date
+  ampLicense       String?
+  insuranceUntil   DateTime? @db.Date
+
+  verified Boolean @default(false)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vessels Vessel[]
+}
+
+/// Nave del marketplace: ficha pública, tabla de precios y modo de cierre.
+model Vessel {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  operatorId String
+  operator   Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  name        String
+  /// Clave de tipo: catamaran | ferry | no_publicado …
+  type        String
+  lengthFt    Int?
+  capacityMax Int
+  marina      String
+
+  /// [{ route, hours, capacityMax, price }] — precio del barco completo.
+  pricing   Json
+  /// ["bahia", "taboga", "perlas"]
+  routes    Json
+  /// [{ es, en }, …]
+  includes  Json
+  /// [{ label: { es, en }, price?, unit? }] — extras bajo solicitud.
+  onRequest Json
+
+  depositPct         Int  @default(30)
+  /// { es, en }
+  cancellationPolicy Json
+
+  photos Json
+  video  String?
+
+  /// deeplink = checkout de PEX con `ref`; quote = cotización de Atlante.
+  closeMode             String   @default("quote")
+  pexVesselSlug         String?
+  pexPath               String?
+  /// "desde $X/persona" publicado por PEX, cuando lo publica.
+  pexPricePerPersonFrom Decimal? @db.Decimal(10, 2)
+
+  /// { es, en } — textos de la ficha.
+  summary     Json?
+  description Json?
+
+  verifiedAt DateTime? @db.Date
+  sourceUrl  String?
+  active     Boolean   @default(true)
+  order      Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, order])
+  @@index([operatorId])
 }

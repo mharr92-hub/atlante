@@ -2,7 +2,8 @@
 /**
  * Guardarraíl del principio 2: el dominio de Pacific Experience sólo puede
  * escribirse en `src/lib/pex.ts` (que construye TODOS los enlaces) y en
- * `src/content/catalog.ts` (donde es el dato `sourceUrl`, no un `href`).
+ * `src/content/catalog.ts` / `src/content/vessels.ts` (donde es el dato
+ * `sourceUrl`, no un `href`).
  *
  * Cualquier otro `href` a mano se salta `buildPexUrl()` y pierde `ref=ATLANTE`,
  * que es la comisión. Por eso esto falla con exit 1 y corre dentro de `lint`.
@@ -15,7 +16,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "src");
 const NEEDLE = "pacificexperience.lat";
 
-const ALLOWED = new Set(["src/lib/pex.ts", "src/content/catalog.ts"]);
+const ALLOWED = new Set([
+  "src/lib/pex.ts",
+  "src/content/catalog.ts",
+  "src/content/vessels.ts",
+]);
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".css", ".json", ".md"]);
 
 /** Ruta relativa a la raíz, siempre con "/" (el script corre en Windows). */

@@ -10,6 +10,7 @@
  * `target` y qué datos lleva.
  */
 import type { Product } from "@/content/catalog";
+import type { Vessel } from "@/content/vessels";
 import { buildPexUrl } from "@/lib/pex";
 import type { SlotOption } from "@/lib/slots";
 
@@ -65,5 +66,37 @@ export function pexDestination(product: Product, opts: DestinationOptions = {}):
     leadId,
     handoffToken,
     campaign: product.slug,
+  });
+}
+
+/**
+ * Destino de una nave del marketplace con `closeMode = "deeplink"` (bloque 4.2):
+ * el checkout de chárter de PEX, con `ref=ATLANTE` y el `ref_id` del lead.
+ *
+ * Sin `pexVesselSlug` no hay checkout que enlazar: se cae a la ficha de la nave
+ * en PEX si la conocemos, y a su home si tampoco. Nunca se pierde el `ref`.
+ */
+export function vesselDestination(
+  vessel: Vessel,
+  opts: { leadId?: string; handoffToken?: string } = {},
+): string {
+  const { leadId, handoffToken } = opts;
+
+  if (vessel.pexVesselSlug) {
+    return buildPexUrl({
+      target: "charter_checkout",
+      vessel: vessel.pexVesselSlug,
+      leadId,
+      handoffToken,
+      campaign: vessel.slug,
+    });
+  }
+
+  return buildPexUrl({
+    target: vessel.pexPath ? "charter_page" : "home",
+    path: vessel.pexPath,
+    leadId,
+    handoffToken,
+    campaign: vessel.slug,
   });
 }

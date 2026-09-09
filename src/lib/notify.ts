@@ -23,7 +23,8 @@ export interface NewLeadNotification {
   paxTotal: number;
   /** Total estimado en USD, tal como lo calculó el servidor. */
   total: number;
-  mode: "puente" | "integrado";
+  /** Ticketería: puente / integrado. Charters (R2): nave / cotización. */
+  mode: "puente" | "integrado" | "charter" | "cotizacion";
 }
 
 export interface NotifyProvider {

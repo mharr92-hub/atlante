@@ -55,7 +55,7 @@ export function normalizePhone(raw: string): string | null {
   return e164;
 }
 
-function cleanName(raw: string): string {
+export function cleanName(raw: string): string {
   const name = (raw ?? "").trim().replace(/\s+/g, " ");
   if (name.length < 3 || name.length > 120) {
     throw new LeadValidationError("name", "nombre inválido");
@@ -66,7 +66,7 @@ function cleanName(raw: string): string {
   return name;
 }
 
-function cleanEmail(raw: string): string {
+export function cleanEmail(raw: string): string {
   const email = (raw ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email) || email.length > 160) {
     throw new LeadValidationError("email", "correo inválido");

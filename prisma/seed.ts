@@ -1,19 +1,24 @@
 /**
  * Seed — `npm run db:seed`.
  *
- * Copia el catálogo en código (`src/content/catalog.ts`, verificado contra las
- * páginas públicas de Pacific Experience el 09/09/2026) a las tablas `Product` y
- * `ProductAddon`, con su `verifiedAt` y su `sourceUrl`.
+ * Copia a la base de datos lo que vive en código:
+ *   - `src/content/catalog.ts` → `Product` / `ProductAddon` (bloque 2);
+ *   - `src/content/vessels.ts` → `Operator` / `Vessel` (bloque 4).
+ *
+ * Todo verificado contra las páginas públicas de Pacific Experience el
+ * 09/09/2026, con su `verifiedAt` y su `sourceUrl`.
  *
  * Es idempotente: hace `upsert` por `slug` y por `(productId, slug)` en los
  * adicionales, así que se puede correr las veces que haga falta. No borra nada
- * ni toca `commissionPct` ni `syncedAt` de las filas que ya existen: esos dos
- * los edita Mark en `/admin/catalogo` y los escribe el cron del feed.
+ * ni toca los campos internos de las filas que ya existen —`commissionPct`,
+ * `syncedAt`, y en el operador el contrato, la licencia AMP, el seguro y la
+ * casilla `verified`—: esos los edita Mark en el admin.
  *
- * No inventa datos: todo lo que escribe sale del catálogo del bloque 2.
+ * No inventa datos: todo lo que escribe sale de los bloques 2 y 4.
  */
 import { Prisma, PrismaClient } from "@prisma/client";
 import { catalog, type Product } from "../src/content/catalog";
+import { operators, vessels, type Operator, type Vessel } from "../src/content/vessels";
 
 const prisma = new PrismaClient();
 
@@ -86,6 +91,75 @@ async function seedProduct(product: Product): Promise<void> {
   }
 }
 
+// ------------------------------------------- marketplace de charters (R2) ---
+
+/** Campos del operador que el código posee. El resto es interno de Mark. */
+function operatorFields(operator: Operator) {
+  return {
+    name: operator.name,
+    whatsapp: operator.whatsapp ?? null,
+    email: operator.email ?? null,
+    active: operator.active,
+  };
+}
+
+async function seedOperator(operator: Operator): Promise<string> {
+  const row = await prisma.operator.upsert({
+    where: { slug: operator.slug },
+    create: {
+      slug: operator.slug,
+      ...operatorFields(operator),
+      // Sólo al crear: después manda `/admin/operadores`.
+      commissionPct: operator.commissionPct ?? null,
+      contractSignedAt: toDate(operator.contractSignedAt ?? ""),
+      ampLicense: operator.ampLicense ?? null,
+      insuranceUntil: toDate(operator.insuranceUntil ?? ""),
+      verified: operator.verified,
+    },
+    update: operatorFields(operator),
+    select: { id: true },
+  });
+  return row.id;
+}
+
+function vesselFields(vessel: Vessel, operatorId: string) {
+  return {
+    operatorId,
+    name: vessel.name,
+    type: vessel.type,
+    lengthFt: vessel.lengthFt ?? null,
+    capacityMax: vessel.capacityMax,
+    marina: vessel.marina,
+    pricing: json(vessel.pricing),
+    routes: json(vessel.routes),
+    includes: json(vessel.includes),
+    onRequest: json(vessel.onRequest),
+    depositPct: vessel.depositPct,
+    cancellationPolicy: json(vessel.cancellationPolicy),
+    photos: json(vessel.photos),
+    video: vessel.video ?? null,
+    closeMode: vessel.closeMode,
+    pexVesselSlug: vessel.pexVesselSlug ?? null,
+    pexPath: vessel.pexPath ?? null,
+    pexPricePerPersonFrom: vessel.pexPricePerPersonFrom ?? null,
+    summary: vessel.summary ? json(vessel.summary) : Prisma.DbNull,
+    description: vessel.description ? json(vessel.description) : Prisma.DbNull,
+    verifiedAt: toDate(vessel.verifiedAt),
+    sourceUrl: vessel.sourceUrl ?? null,
+    active: vessel.active,
+    order: vessel.order,
+  };
+}
+
+async function seedVessel(vessel: Vessel, operatorId: string): Promise<void> {
+  const data = vesselFields(vessel, operatorId);
+  await prisma.vessel.upsert({
+    where: { slug: vessel.slug },
+    create: { slug: vessel.slug, ...data },
+    update: data,
+  });
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     console.log("sin DATABASE_URL: nada que sembrar");
@@ -97,8 +171,30 @@ async function main() {
     console.log(`✔ ${product.slug} (${(product.addons ?? []).length} adicionales)`);
   }
 
-  const total = await prisma.product.count();
-  console.log(`catálogo sembrado: ${catalog.length} productos escritos, ${total} en la tabla`);
+  const operatorIds = new Map<string, string>();
+  for (const operator of operators) {
+    operatorIds.set(operator.slug, await seedOperator(operator));
+    console.log(`✔ operador ${operator.slug}`);
+  }
+
+  for (const vessel of vessels) {
+    const operatorId = operatorIds.get(vessel.operatorSlug);
+    if (!operatorId) {
+      console.warn(`✖ ${vessel.slug}: no existe el operador ${vessel.operatorSlug}`);
+      continue;
+    }
+    await seedVessel(vessel, operatorId);
+    console.log(`✔ nave ${vessel.slug} (${vessel.pricing.length} filas de precio)`);
+  }
+
+  const [products, vesselCount] = await Promise.all([
+    prisma.product.count(),
+    prisma.vessel.count(),
+  ]);
+  console.log(
+    `catálogo sembrado: ${catalog.length} productos escritos, ${products} en la tabla; ` +
+      `${vessels.length} naves escritas, ${vesselCount} en la tabla`,
+  );
 }
 
 main()
