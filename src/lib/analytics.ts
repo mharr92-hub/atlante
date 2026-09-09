@@ -22,6 +22,8 @@ export type AnalyticsEvent =
   | "funnel_step"
   | "lead_created"
   | "redirect_to_pex"
+  // Cotización de una nave aliada (PRD 5.12 / bloque 4.2).
+  | "quote_requested"
   | "whatsapp_click";
 
 export function track(event: AnalyticsEvent, params: Params = {}): void {
@@ -35,8 +37,10 @@ export function track(event: AnalyticsEvent, params: Params = {}): void {
     if (typeof w.gtag === "function") w.gtag("event", event, params);
 
     if (typeof w.fbq === "function") {
-      // El único evento estándar de Meta que aplica es Lead (paso 3 enviado).
-      if (event === "lead_created") w.fbq("track", "Lead", params);
+      // Los eventos estándar de Meta que aplican son los dos que crean un lead.
+      if (event === "lead_created" || event === "quote_requested") {
+        w.fbq("track", "Lead", params);
+      }
       else w.fbq("trackCustom", event, params);
     }
   } catch {

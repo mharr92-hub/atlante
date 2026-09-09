@@ -6,9 +6,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // El admin es privado; `/listo` es una pantalla de tránsito y `/api/` no
-      // es contenido.
-      disallow: ["/admin", "/reservar/*/listo", "/api/"],
+      // El admin es privado; las pantallas de salto y el formulario de
+      // cotización son tránsito, y `/api/` no es contenido.
+      disallow: [
+        "/admin",
+        "/reservar/*/listo",
+        "/charters/*/listo",
+        "/cotizar",
+        "/api/",
+      ],
     },
     sitemap: `${site.url}/sitemap.xml`,
   };

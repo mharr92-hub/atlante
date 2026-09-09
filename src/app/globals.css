@@ -1724,3 +1724,241 @@ textarea {
   background: rgba(18, 59, 54, 0.12);
   color: var(--deep);
 }
+
+/* ============================================================
+   Bloque 4 · Marketplace de charters
+   Movil primero: tipografia >= 15 px, controles de 44 px y una
+   sola columna hasta 900 px (la rejilla de arriba ya colapsa).
+   ============================================================ */
+
+/* Los selectores y textareas del sitio publico comparten el alto
+   y el borde de `.field input` (48 px: dedo, no raton). */
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid rgba(10, 36, 33, 0.24);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 16px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* ---------- Filtros del listado ---------- */
+.charter-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: end;
+  margin: 0 0 8px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(10, 36, 33, 0.12);
+  border-radius: 10px;
+}
+
+.charter-filters .filters-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+
+.charter-filters .field {
+  margin-bottom: 0;
+}
+
+.charter-filters .button {
+  min-height: 48px;
+}
+
+.charter-count {
+  margin: 18px 0 14px;
+  font-size: 15px;
+}
+
+/* ---------- Tarjeta de nave ---------- */
+.charter-card .card-price-person {
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.charter-card.light-card .card-price-person {
+  color: var(--bronze);
+}
+
+.vessel-seal {
+  margin: 8px 24px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--deep);
+}
+
+.vessel-seal small {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(10, 36, 33, 0.7);
+}
+
+.book-panel .vessel-seal {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.compare-toggle {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.compare-toggle.is-selected {
+  background: var(--ink);
+  color: var(--sand);
+}
+
+.compare-toggle[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.compare-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+  background: rgba(248, 243, 232, 0.97);
+  border: 1px solid rgba(10, 36, 33, 0.14);
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.compare-bar .button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- Ficha y comparador ---------- */
+.vessel-price-table,
+.compare-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(10, 36, 33, 0.12);
+  text-align: left;
+  font-size: 15px;
+  vertical-align: top;
+}
+
+.compare-table thead th {
+  font-size: 17px;
+  border-bottom: 2px solid rgba(10, 36, 33, 0.24);
+}
+
+.compare-table thead th small {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(10, 36, 33, 0.66);
+}
+
+.compare-table tbody th {
+  font-weight: 600;
+  color: rgba(10, 36, 33, 0.78);
+}
+
+.compare-highlight {
+  background: rgba(215, 168, 91, 0.18);
+}
+
+.compare-people {
+  max-width: 220px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Formularios de charter y de aliados ---------- */
+.charter-form {
+  max-width: 620px;
+}
+
+.charter-form-wrap {
+  margin-top: 44px;
+}
+
+.charter-form .button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quote-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+}
+
+.partner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.partner-card {
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(10, 36, 33, 0.12);
+  border-radius: 10px;
+}
+
+.partner-card h2 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.partner-card p {
+  font-size: 16px;
+}
+
+.partner-commission {
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .quote-layout,
+  .partner-grid {
+    grid-template-columns: 1fr;
+  }
+  .charter-filters {
+    padding: 16px;
+  }
+}

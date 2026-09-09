@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import PexDisclosure from "@/components/site/PexDisclosure";
 
 const legalItems = [
+  { href: "/aliados", key: "partners_eyebrow" },
   { href: "/como-funciona", key: "legal_how" },
   { href: "/terminos", key: "legal_terms" },
   { href: "/privacidad", key: "legal_privacy" },

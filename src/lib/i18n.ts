@@ -228,6 +228,179 @@ export const dict = {
   },
   listo_copy: { es: "Copiar", en: "Copy" },
   listo_copied: { es: "Copiado", en: "Copied" },
+
+  // ------------------------------------------- marketplace de charters ----
+  charters_marketplace_lede: {
+    es: "Compara naves por capacidad, ruta y precio por persona. El pago se completa con el operador: Atlante nunca cobra.",
+    en: "Compare vessels by capacity, route and price per person. Payment is completed with the operator: Atlante never charges you.",
+  },
+  filters_title: { es: "Filtros", en: "Filters" },
+  filter_people: { es: "¿Cuántas personas?", en: "How many people?" },
+  filter_min_capacity: { es: "Capacidad mínima", en: "Minimum capacity" },
+  filter_max_budget: { es: "Presupuesto máximo por barco", en: "Maximum budget per boat" },
+  filter_duration: { es: "Duración", en: "Duration" },
+  filter_route: { es: "Ruta", en: "Route" },
+  filter_type: { es: "Tipo de nave", en: "Vessel type" },
+  filter_marina: { es: "Marina de salida", en: "Departure marina" },
+  filter_all: { es: "Todas", en: "All" },
+  filter_clear: { es: "Limpiar filtros", en: "Clear filters" },
+  hours_n: { es: "{n} h", en: "{n} h" },
+  vessels_count: { es: "{n} naves", en: "{n} vessels" },
+  charters_empty: {
+    es: "Ninguna nave cumple esos filtros. Prueba con menos restricciones.",
+    en: "No vessel matches those filters. Try loosening them.",
+  },
+
+  route_bahia: { es: "Bahía y Puente", en: "Bay and Bridge" },
+  route_taboga: { es: "Isla Taboga", en: "Taboga Island" },
+  route_perlas: { es: "Las Perlas", en: "Las Perlas" },
+
+  vessel_type_catamaran: { es: "Catamarán", en: "Catamaran" },
+  vessel_type_ferry: { es: "Ferry", en: "Ferry" },
+  vessel_type_no_publicado: { es: "Tipo no publicado", en: "Type not published" },
+
+  badge_direct: { es: "Reserva directa", en: "Direct booking" },
+  badge_quote: { es: "Cotizar", en: "Request a quote" },
+  from_boat_tier: {
+    es: "desde {price} ({hours} h · hasta {cap} pax)",
+    en: "from {price} ({hours} h · up to {cap} pax)",
+  },
+  per_person_from: { es: "desde {price} por persona", en: "from {price} per person" },
+  per_person_for_group: { es: "para {n} personas", en: "for {n} people" },
+  no_price_for_group: {
+    es: "Sin tarifa publicada para {n} personas: consúltanos.",
+    en: "No published rate for {n} people: ask us.",
+  },
+
+  compare_add: { es: "Comparar", en: "Compare" },
+  compare_added: { es: "En el comparador", en: "In the comparison" },
+  compare_open: { es: "Comparar {n} naves", en: "Compare {n} vessels" },
+  compare_title: { es: "Comparador de naves", en: "Vessel comparison" },
+  compare_max: { es: "Puedes comparar hasta 4 naves.", en: "You can compare up to 4 vessels." },
+  compare_empty: {
+    es: "Elige naves en el listado para compararlas.",
+    en: "Pick vessels from the listing to compare them.",
+  },
+
+  vessel_operator: { es: "Operador", en: "Operator" },
+  operator_verified: { es: "Operador verificado", en: "Verified operator" },
+  operator_verified_note: {
+    es: "Licencia AMP, seguro vigente y contrato firmado, comprobados por Atlante.",
+    en: "AMP licence, valid insurance and signed contract, checked by Atlante.",
+  },
+  marina_label: { es: "Marina de salida", en: "Departure marina" },
+  deposit_label: { es: "Apartado", en: "Deposit" },
+  deposit_value: { es: "{n} % al reservar", en: "{n} % at booking" },
+  cancellation_label: { es: "Cancelación", en: "Cancellation" },
+  on_request_title: { es: "Bajo solicitud", en: "On request" },
+  on_request_no_price: { es: "Sin precio publicado", en: "No published price" },
+  unit_per_hour: { es: "por hora", en: "per hour" },
+  unit_per_booking: { es: "por reserva", en: "per booking" },
+  price_table_title: { es: "Precios por ruta y jornada", en: "Prices by route and duration" },
+  th_route: { es: "Ruta", en: "Route" },
+  th_duration: { es: "Duración", en: "Duration" },
+  th_capacity: { es: "Capacidad", en: "Capacity" },
+  th_boat_price: { es: "Barco completo", en: "Whole boat" },
+  up_to_pax: { es: "hasta {n} pax", en: "up to {n} pax" },
+  pex_publishes_per_person: {
+    es: "Pacific Experience publica «desde {price} por persona» para esta nave.",
+    en: "Pacific Experience publishes “from {price} per person” for this vessel.",
+  },
+  routes_label: { es: "Rutas", en: "Routes" },
+
+  charter_form_title: { es: "Reserva esta nave", en: "Book this vessel" },
+  charter_form_lede: {
+    es: "Déjanos tus datos y te llevamos al checkout de Pacific Experience con el código de Atlante.",
+    en: "Leave your details and we take you to Pacific Experience's checkout with Atlante's code.",
+  },
+  field_hours: { es: "Jornada", en: "Duration" },
+  field_people: { es: "Personas", en: "People" },
+  field_charter_date: { es: "Fecha deseada", en: "Preferred date" },
+  field_occasion: { es: "Ocasión (opcional)", en: "Occasion (optional)" },
+  occasion_cumpleanos: { es: "Cumpleaños", en: "Birthday" },
+  occasion_despedida: { es: "Despedida de soltero o soltera", en: "Bachelor or bachelorette party" },
+  occasion_corporativo: { es: "Corporativo", en: "Corporate" },
+  occasion_propuesta: { es: "Propuesta de matrimonio", en: "Marriage proposal" },
+  occasion_familiar: { es: "Paseo familiar", en: "Family outing" },
+  occasion_otro: { es: "Otra", en: "Other" },
+  estimate_boat: { es: "Barco completo", en: "Whole boat" },
+  estimate_note: {
+    es: "Precio publicado por Pacific Experience para ese tramo; el total final lo verás en su checkout.",
+    en: "Price published by Pacific Experience for that tier; you will see the final total on their checkout.",
+  },
+  err_hours: { es: "Elige una jornada publicada.", en: "Pick a published duration." },
+  err_people: { es: "Revisa la cantidad de personas.", en: "Check the number of people." },
+  err_vessel: { es: "Esa nave no está disponible.", en: "That vessel is not available." },
+  back_charters: { es: "Volver a las naves", en: "Back to the vessels" },
+
+  quote_cta: { es: "Pedir cotización", en: "Request a quote" },
+  quote_title: { es: "Cotizar {name}", en: "Get a quote for {name}" },
+  quote_lede: {
+    es: "Cuéntanos la fecha, la jornada y el grupo. Atlante negocia con el operador y te pasa la propuesta.",
+    en: "Tell us the date, the duration and the group. Atlante talks to the operator and sends you the proposal.",
+  },
+  // PENDIENTE MARK: sin horario de atención confirmado no se promete un SLA.
+  quote_reply: { es: "Te respondemos por WhatsApp.", en: "We reply on WhatsApp." },
+  quote_sent_title: { es: "Recibimos tu solicitud", en: "We got your request" },
+  quote_sent_body: {
+    es: "Abre WhatsApp para que la conversación quede contigo y respondamos ahí mismo.",
+    en: "Open WhatsApp so the conversation stays with you and we can reply right there.",
+  },
+  quote_open_whatsapp: { es: "Abrir WhatsApp", en: "Open WhatsApp" },
+  send: { es: "Enviar", en: "Send" },
+
+  // -------------------------------------------------------------- aliados --
+  partners_eyebrow: { es: "Aliados", en: "Partners" },
+  partners_title: { es: "Trabaja con Atlante.", en: "Work with Atlante." },
+  partners_lede: {
+    es: "Atlante no opera naves ni cobra al cliente: conecta a quien busca con quien opera. Estas son las tres formas de sumarte.",
+    en: "Atlante does not operate vessels and never charges the customer: it connects who is looking with who operates. These are the three ways to join.",
+  },
+  partners_operators_title: { es: "Operadores de charter", en: "Charter operators" },
+  partners_operators_body: {
+    es: "Publicamos tu ficha en el marketplace y te mandamos leads calificados con fecha, jornada y grupo. Tú cobras al cliente y operas; Atlante cobra comisión según acuerdo.",
+    en: "We publish your listing on the marketplace and send you qualified leads with date, duration and group size. You charge the customer and operate; Atlante earns a commission as agreed.",
+  },
+  partners_hotels_title: { es: "Hoteles y concierges", en: "Hotels and concierges" },
+  partners_hotels_body: {
+    es: "Te damos un código de aliado que viaja en cada reserva que recomiendes. No operas nada y la comisión se liquida por reporte mensual.",
+    en: "We give you a partner code that travels with every booking you recommend. You operate nothing and the commission is settled with a monthly report.",
+  },
+  partners_agencies_title: { es: "Agencias y DMC", en: "Agencies and DMCs" },
+  partners_agencies_body: {
+    es: "Tarifa neta y disponibilidad para armar tus paquetes, con el mismo precio que publica el operador.",
+    en: "Net rates and availability to build your packages, at the same price the operator publishes.",
+  },
+  partners_commission_note: {
+    es: "Comisión según acuerdo: se fija por operador antes de publicar la ficha.",
+    en: "Commission as agreed: it is set per operator before the listing goes live.",
+  },
+  partners_cta: { es: "Registrarme", en: "Sign up" },
+  partner_form_title: { es: "Solicitud de aliado", en: "Partner application" },
+  partner_kind: { es: "¿Quién eres?", en: "Who are you?" },
+  partner_kind_operator: { es: "Operador de charter", en: "Charter operator" },
+  partner_kind_hotel: { es: "Hotel o concierge", en: "Hotel or concierge" },
+  partner_kind_agency: { es: "Agencia o DMC", en: "Agency or DMC" },
+  field_business: { es: "Nombre o razón social", en: "Name or business name" },
+  field_vessel_name: { es: "Nombre de la embarcación (opcional)", en: "Vessel name (optional)" },
+  field_capacity: { es: "Capacidad (opcional)", en: "Capacity (optional)" },
+  field_zone: { es: "Zona de operación (opcional)", en: "Operating area (optional)" },
+  field_photos: {
+    es: "Enlaces de fotos, uno por línea (opcional)",
+    en: "Photo links, one per line (optional)",
+  },
+  field_message: { es: "Cuéntanos (opcional)", en: "Tell us more (optional)" },
+  partner_submit: { es: "Enviar solicitud", en: "Send application" },
+  partner_sent: {
+    es: "Recibimos tu solicitud. Te escribimos por WhatsApp para revisarla.",
+    en: "We got your application. We will message you on WhatsApp to review it.",
+  },
+  partner_sent_offline: {
+    es: "No pudimos guardar la solicitud. Escríbenos por WhatsApp y la registramos a mano.",
+    en: "We could not save the application. Message us on WhatsApp and we will register it by hand.",
+  },
+  err_partner_name: { es: "Escribe el nombre.", en: "Enter the name." },
+  err_generic: { es: "Revisa los datos e inténtalo de nuevo.", en: "Check the details and try again." },
 } as const;
 
 export type DictKey = keyof typeof dict;
@@ -243,6 +416,35 @@ export function tf(key: DictKey, locale: Locale, vars: Record<string, string | n
     (out, [name, value]) => out.replaceAll(`{${name}}`, String(value)),
     t(key, locale),
   );
+}
+
+/** Traduce una clave dinámica del marketplace; sin entrada devuelve la clave. */
+function dynamicLabel(prefix: string, value: string, locale: Locale): string {
+  const key = `${prefix}${value}` as DictKey;
+  return key in dict ? t(key, locale) : value;
+}
+
+/** `bahia` → "Bahía y Puente". */
+export function routeLabel(route: string, locale: Locale): string {
+  return dynamicLabel("route_", route, locale);
+}
+
+/** `catamaran` → "Catamarán". */
+export function vesselTypeLabel(type: string, locale: Locale): string {
+  return dynamicLabel("vessel_type_", type, locale);
+}
+
+/** `cumpleanos` → "Cumpleaños". */
+export function occasionLabel(occasion: string, locale: Locale): string {
+  return dynamicLabel("occasion_", occasion, locale);
+}
+
+/** Unidad de un extra bajo solicitud; sin unidad publicada, cadena vacía. */
+export function onRequestUnitLabel(unit: string | undefined, locale: Locale): string {
+  if (unit === "per_person") return t("per_person", locale);
+  if (unit === "per_hour") return t("unit_per_hour", locale);
+  if (unit === "per_booking") return t("unit_per_booking", locale);
+  return "";
 }
 
 /** Month names for the funnel calendar (index 0 = January). */

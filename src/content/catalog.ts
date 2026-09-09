@@ -637,5 +637,9 @@ export const ticketProducts = catalog.filter((p) =>
   ["tour", "party", "ferry"].includes(p.kind),
 );
 
-/** Naves de Pacific Experience: en el bloque 2 sólo enlazan a su checkout. */
-export const pexVessels = catalog.filter((p) => p.kind === "charter_pex");
+/**
+ * Las naves de PEX siguen aquí como productos `charter_pex` porque son la fuente
+ * de precio que compara `npm run check:pex` y la que edita `/admin/catalogo`.
+ * Su ficha pública, en cambio, vive desde el bloque 4 en `src/content/vessels.ts`
+ * y `/charters`; ninguna página las lee ya desde el catálogo.
+ */

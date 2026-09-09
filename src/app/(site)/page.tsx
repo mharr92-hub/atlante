@@ -8,7 +8,9 @@ import FaqSection from "@/components/sections/FaqSection";
 import ContactSection from "@/components/sections/ContactSection";
 import PexDisclosure from "@/components/site/PexDisclosure";
 import { site } from "@/config/site";
-import { getTicketProducts, getVessels } from "@/lib/catalog";
+import { getTicketProducts } from "@/lib/catalog";
+import { getOperators, getVessels } from "@/lib/vessels";
+import { DEFAULT_PEOPLE, operatorSealVisible } from "@/lib/vessel-pricing";
 
 // Only verifiable facts: no rating, no review count, no email until Mark has a
 // real mailbox (PENDIENTE MARK).
@@ -26,7 +28,15 @@ const jsonLd = {
 };
 
 export default async function Home() {
-  const [tickets, vessels] = await Promise.all([getTicketProducts(), getVessels()]);
+  const [tickets, vessels, operators] = await Promise.all([
+    getTicketProducts(),
+    getVessels(),
+    getOperators(),
+  ]);
+  const byOperator = new Map(operators.map((o) => [o.slug, o]));
+  const verified = vessels
+    .filter((v) => operatorSealVisible(byOperator.get(v.operatorSlug)))
+    .map((v) => v.slug);
 
   return (
     <>
@@ -38,7 +48,11 @@ export default async function Home() {
       <PexDisclosure variant="banner" />
       <ValueProps />
       <ToursSection products={tickets.filter((p) => p.available).slice(0, 3)} />
-      <ChartersSection vessels={vessels.filter((v) => v.available).slice(0, 3)} />
+      <ChartersSection
+        vessels={vessels.slice(0, 3)}
+        people={DEFAULT_PEOPLE}
+        verified={verified}
+      />
       <Destinations />
       <About />
       <FaqSection />

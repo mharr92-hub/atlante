@@ -17,6 +17,12 @@ export const ROUTES = ["bahia", "taboga", "perlas"] as const;
 /** Jornadas que publica PEX. */
 export const DURATIONS = [4, 8, 12] as const;
 
+/** Grupo por defecto del control "¿Cuántas personas?" (listado y home). */
+export const DEFAULT_PEOPLE = 15;
+
+/** Tope del comparador (PRD 5.7). */
+export const MAX_COMPARE = 4;
+
 export interface GroupQuery {
   /** Tamaño del grupo. Sin él no hay precio por persona. */
   people?: number;

@@ -230,11 +230,6 @@ export async function getTicketProducts(): Promise<Product[]> {
   return (await getProducts()).filter((p) => ["tour", "party", "ferry"].includes(p.kind));
 }
 
-/** Naves de PEX: enlazan a su checkout, sin funnel (hasta el bloque 4). */
-export async function getVessels(): Promise<Product[]> {
-  return (await getProducts()).filter((p) => p.kind === "charter_pex");
-}
-
 export async function getCatalogSource(): Promise<CatalogSource> {
   return (await getCatalog()).source;
 }

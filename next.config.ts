@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 /**
  * Permanent redirects for URLs that already existed before R0.
- * `/compare` and the six placeholder products are gone; they point at the two
- * catalog entry points so nothing indexed lands on a 404.
+ * `/compare` and the six placeholder products are gone; they point at the
+ * catalog entry points so nothing indexed lands on a 404. Since R2 the old
+ * comparator has a real destination: `/charters/comparar` (PRD 5.1).
  */
 const goneToCharters = [
-  "/compare",
   "/tours/charter-atardecer-privado",
   "/tours/yate-completo-taboga",
   "/tours/charter-premium-las-perlas",
@@ -21,6 +21,7 @@ const goneToTours = [
 const nextConfig: NextConfig = {
   async redirects() {
     return [
+      { source: "/compare", destination: "/charters/comparar", permanent: true },
       ...goneToCharters.map((source) => ({
         source,
         destination: "/charters",
