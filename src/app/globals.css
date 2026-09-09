@@ -14,6 +14,8 @@
   --bone: #efe5d2;
   --mist: #cad8d0;
   --bronze: #b8733a;
+  /* Bronce legible sobre marfil: el claro se queda en 3.4:1 y WCAG AA pide 4.5. */
+  --bronze-dark: #8f5528;
   --gold: #d7a85b;
   --white: #ffffff;
   --shadow: 0 28px 80px rgba(10, 36, 33, 0.18);
@@ -211,13 +213,27 @@ a {
 }
 
 .eyebrow,
+/* Dato corto en mayúsculas. Sobre superficie clara va en bronce oscuro y sobre
+   fondo oscuro en dorado: el bronce claro se quedaba en 3.4:1 / 3.6:1 y a
+   12 px no se lee al sol (regla 14). */
 .fact {
   margin: 0 0 16px;
-  color: var(--bronze);
-  font-size: 12px;
+  color: var(--bronze-dark);
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+.section:not(.section-ivory) .fact,
+.hero .fact,
+.tour-hero .fact {
+  color: var(--gold);
+}
+
+.section-ivory .light-card .fact,
+.section-ivory .book-panel .fact {
+  color: var(--bronze-dark);
 }
 
 .hero .eyebrow {
@@ -267,15 +283,25 @@ p {
   margin-top: 34px;
 }
 
+/* El CTA principal va en bronce oscuro: con el bronce claro el marfil quedaba
+   en 3.4:1 y el botón es texto de 12 px en mayúsculas (regla 14). */
 .button-primary {
-  border-color: var(--bronze);
-  background: var(--bronze);
+  border-color: var(--bronze-dark);
+  background: var(--bronze-dark);
   color: var(--ivory);
 }
 
 .button-ghost {
   border-color: rgba(248, 243, 232, 0.6);
   color: var(--ivory);
+}
+
+/* El ghost está pensado para fondo oscuro: sobre marfil quedaba marfil sobre
+   marfil (contraste 1.07, ilegible al sol). */
+.section-ivory .button-ghost,
+.charter-filters .button-ghost {
+  border-color: rgba(10, 36, 33, 0.55);
+  color: var(--ink);
 }
 
 /* ---------- Sections ---------- */
@@ -382,7 +408,13 @@ p {
 }
 
 .charter-card.light-card a {
-  color: var(--bronze);
+  color: var(--bronze-dark);
+}
+
+/* El CTA de la tarjeta es un botón lleno: el color de enlace de la tarjeta
+   clara lo dejaba en bronce sobre bronce. */
+.charter-card.light-card .button-primary {
+  color: var(--ivory);
 }
 
 .card-link {
@@ -676,8 +708,9 @@ textarea {
   color: var(--ink);
 }
 .book-panel .price-sub {
-  font-size: 13px;
-  color: rgba(10, 36, 33, 0.6);
+  font-size: 14px;
+  /* 0.6 se queda en 4.37:1 sobre blanco; 0.72 pasa AA. */
+  color: rgba(10, 36, 33, 0.72);
 }
 /* weather widget */
 .weather-card {
@@ -713,18 +746,25 @@ textarea {
 }
 .pex-disclosure a,
 .pex-inline a {
-  color: var(--bronze);
+  color: var(--bronze-dark);
   font-weight: 700;
   text-decoration: underline;
 }
 .pex-inline {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   color: rgba(248, 243, 232, 0.8);
 }
 .pex-inline a {
   color: var(--gold);
+}
+/* Variante sobre superficie clara (paneles de ficha y funnel). */
+.pex-inline-light {
+  color: rgba(10, 36, 33, 0.78);
+}
+.pex-inline-light a {
+  color: var(--bronze-dark);
 }
 
 /* ---------- Legal / static pages ---------- */
@@ -1182,10 +1222,16 @@ textarea {
 /* ---------- Tarjetas del catálogo ---------- */
 .card-kind {
   margin: 16px 24px 0;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
+}
+
+/* El dorado sobre tarjeta clara da 2.1:1: en la tarjeta clara va bronce. */
+.light-card .card-kind {
+  color: var(--bronze-dark);
+  font-weight: 700;
 }
 
 .card-price {

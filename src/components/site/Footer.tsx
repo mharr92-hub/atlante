@@ -21,7 +21,9 @@ export default function Footer() {
       <div className="section-inner footer-grid">
         <div>
           <Link className="brand" href="/" aria-label={site.name}>
-            <span className="brand-mark">A</span>
+            <span className="brand-mark" aria-hidden="true">
+              A
+            </span>
             <span>
               <strong>{site.shortName}</strong>
               <small>{site.tagline}</small>

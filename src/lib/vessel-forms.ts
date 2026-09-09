@@ -33,7 +33,8 @@ export function parsePricingRows(raw: string): PricingRow[] {
     const route = slugifyKey(parts[0] ?? "");
     const hours = Number(parts[1]);
     const capacityMax = Number(parts[2]);
-    const price = Number(parts[3]);
+    // Una celda de precio vacía no es "gratis": es una fila a medias.
+    const price = parts[3] ? Number(parts[3]) : Number.NaN;
     if (!route) continue;
     if (!Number.isFinite(hours) || hours <= 0 || hours > 24) continue;
     if (!Number.isFinite(capacityMax) || capacityMax <= 0 || capacityMax > 1000) continue;

@@ -20,7 +20,9 @@ export default function Header() {
   return (
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`} data-header>
       <Link className="brand" href="/" aria-label={site.name}>
-        <span className="brand-mark">A</span>
+        <span className="brand-mark" aria-hidden="true">
+          A
+        </span>
         <span>
           <strong>{site.shortName}</strong>
           <small>{site.tagline}</small>

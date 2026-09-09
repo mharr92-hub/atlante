@@ -62,11 +62,6 @@ export default function PexDisclosure({
   }
 
   return (
-    <p
-      className="pex-inline"
-      style={tone === "light" ? { color: "rgba(10,36,33,.7)" } : undefined}
-    >
-      {text}
-    </p>
+    <p className={tone === "light" ? "pex-inline pex-inline-light" : "pex-inline"}>{text}</p>
   );
 }
