@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { csvDocument, csvHeaders } from "@/lib/csv";
 import { buildLeadWhere, type LeadSearch } from "@/lib/lead-filters";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ const COLUMNS = [
   "nave",
   "fecha_servicio",
   "horario",
+  "pex_slot_id",
   "pax",
   "nombre",
   "whatsapp",
@@ -31,17 +33,9 @@ const COLUMNS = [
   "notas",
 ] as const;
 
-/** Escapa un campo para CSV separado por comas. */
-function cell(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  const text = value instanceof Date ? value.toISOString() : String(value);
-  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
 /**
- * Export para conciliar contra el reporte de PEX. Se abre en Excel y en Sheets:
- * UTF-8 con BOM (si no, los acentos salen rotos en Excel) y coma como
- * separador. Respeta los mismos filtros que la tabla.
+ * Export para conciliar contra el reporte de PEX. Respeta los mismos filtros que
+ * la tabla; el formato (BOM, coma, CRLF) lo pone `lib/csv.ts`.
  */
 export async function GET(request: Request) {
   await requireAdmin();
@@ -70,8 +64,7 @@ export async function GET(request: Request) {
     return new Response("No se pudo leer la base de datos", { status: 503 });
   }
 
-  const rows = leads.map((lead) =>
-    [
+  const rows = leads.map((lead) => [
       lead.id,
       lead.createdAt,
       lead.status,
@@ -80,6 +73,7 @@ export async function GET(request: Request) {
       lead.vesselSlug,
       lead.serviceDate ? lead.serviceDate.toISOString().slice(0, 10) : "",
       lead.timeSlot,
+      lead.pexSlotId,
       lead.paxTotal,
       lead.name,
       lead.phone,
@@ -95,19 +89,7 @@ export async function GET(request: Request) {
       lead.redirectedAt,
       lead.paidAt,
       lead.notes,
-    ]
-      .map(cell)
-      .join(","),
-  );
+  ]);
 
-  const csv = `﻿${COLUMNS.join(",")}\r\n${rows.join("\r\n")}\r\n`;
-  const stamp = new Date().toISOString().slice(0, 10);
-
-  return new Response(csv, {
-    headers: {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="atlante-leads-${stamp}.csv"`,
-      "cache-control": "no-store",
-    },
-  });
+  return new Response(csvDocument(COLUMNS, rows), { headers: csvHeaders("leads") });
 }

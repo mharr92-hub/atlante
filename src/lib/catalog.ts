@@ -24,7 +24,7 @@ import {
   type Schedule,
 } from "@/content/catalog";
 import { getDb } from "@/lib/db";
-import type { SlotOption } from "@/lib/slots";
+import { SLOTS_MAX_AGE_MS, type SlotOption } from "@/lib/slots";
 
 export type { Product, ProductAddon } from "@/content/catalog";
 
@@ -239,6 +239,12 @@ export async function getCatalogSource(): Promise<CatalogSource> {
   return (await getCatalog()).source;
 }
 
+/** `slug` → nombre en español, para las tablas del admin y los CSV. */
+export async function productLabels(): Promise<(slug: string) => string> {
+  const names = new Map((await getProducts()).map((p) => [p.slug, p.name.es]));
+  return (slug: string) => names.get(slug) ?? slug;
+}
+
 // -------------------------------------------------------------- salidas -----
 
 export interface ProductSlots {
@@ -292,6 +298,63 @@ export async function getProductSlots(slug: string, from = new Date()): Promise<
   }
 }
 
+/** Estado de la sincronización de un producto, para `/admin/catalogo`. */
+export interface SlotSnapshot {
+  slug: string;
+  slots: number;
+  /** `syncedAt` de la salida más reciente. */
+  syncedAt: Date | null;
+  /** Snapshot con salidas y menos de 24 h: ese producto está en integrado. */
+  fresh: boolean;
+}
+
+export interface IntegrationStatus {
+  /** "integrado" en cuanto un producto tiene salidas frescas del feed. */
+  mode: "puente" | "integrado";
+  /** ¿Existe `PEX_FEED_URL`? */
+  feedConfigured: boolean;
+  snapshots: SlotSnapshot[];
+}
+
+/**
+ * Modo de operación, sólo para el admin (nunca se muestra en público, 3.3).
+ *
+ * Sin base de datos, sin feed o con el snapshot vencido, el modo es "puente".
+ */
+export async function getIntegrationStatus(now = new Date()): Promise<IntegrationStatus> {
+  const feed = Boolean((process.env.PEX_FEED_URL ?? "").trim());
+  const db = getDb();
+  if (!db) return { mode: "puente", feedConfigured: feed, snapshots: [] };
+
+  try {
+    const rows = await db.product.findMany({
+      select: {
+        slug: true,
+        _count: { select: { slots: true } },
+        slots: { orderBy: { syncedAt: "desc" }, take: 1, select: { syncedAt: true } },
+      },
+      orderBy: [{ order: "asc" }, { slug: "asc" }],
+    });
+
+    const snapshots: SlotSnapshot[] = rows.map((row) => {
+      const syncedAt = row.slots[0]?.syncedAt ?? null;
+      const fresh =
+        row._count.slots > 0 &&
+        syncedAt !== null &&
+        now.getTime() - syncedAt.getTime() < SLOTS_MAX_AGE_MS;
+      return { slug: row.slug, slots: row._count.slots, syncedAt, fresh };
+    });
+
+    return {
+      mode: snapshots.some((s) => s.fresh) ? "integrado" : "puente",
+      feedConfigured: feed,
+      snapshots,
+    };
+  } catch {
+    return { mode: "puente", feedConfigured: feed, snapshots: [] };
+  }
+}
+
 /** `verifiedAt` con más de `days` días: aviso en `/admin/catalogo`. */
 export function verificationIsStale(verifiedAt: string, days = 14, now = new Date()): boolean {
   if (!verifiedAt) return true;
@@ -312,4 +375,24 @@ export function defaultCommissionPct(): number {
 export function numberOrDefaultPct(value: Prisma.Decimal | number | null): number {
   const pct = numberOrUndefined(value);
   return pct === undefined ? defaultCommissionPct() : pct;
+}
+
+/**
+ * Comisión aplicable a un producto: la suya si Mark la fijó en
+ * `/admin/catalogo`, si no `ATLANTE_COMMISSION_PCT` (20 % por defecto).
+ */
+export async function commissionPctFor(slug: string | null | undefined): Promise<number> {
+  const fallback = defaultCommissionPct();
+  const db = getDb();
+  if (!db || !slug) return fallback;
+
+  try {
+    const row = await db.product.findUnique({
+      where: { slug },
+      select: { commissionPct: true },
+    });
+    return numberOrDefaultPct(row?.commissionPct ?? null);
+  } catch {
+    return fallback;
+  }
 }

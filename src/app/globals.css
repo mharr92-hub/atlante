@@ -983,6 +983,86 @@ textarea {
   border-radius: 6px;
   font-size: 14px;
 }
+
+/* ---------- Formularios del admin de catálogo (bloque 3.5) ---------- */
+.admin-panel h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.admin-form-grid > label,
+.admin-form-grid > fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  color: rgba(10, 36, 33, 0.7);
+}
+.admin-form-grid input[type="text"],
+.admin-form-grid input[type="url"],
+.admin-form-grid input[type="date"],
+.admin-form-grid input[type="number"],
+.admin-form-grid select,
+.admin-form-grid textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid rgba(10, 36, 33, 0.2);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+}
+.admin-form-grid textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.admin-form-grid input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+.admin-form-grid > label:has(> input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+}
+.admin-form-wide {
+  grid-column: 1 / -1;
+}
+.admin-form-grid > fieldset {
+  border: 1px solid rgba(10, 36, 33, 0.14);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.admin-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+.admin-checks label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.admin-addon {
+  padding: 14px 0;
+  border-top: 1px solid rgba(10, 36, 33, 0.12);
+}
+.admin-addon:first-of-type {
+  border-top: 0;
+}
+.admin-warn {
+  display: inline-block;
+  font-size: 13px;
+  color: #8c1f1f;
+}
+
 .admin-login {
   display: grid;
   place-items: center;

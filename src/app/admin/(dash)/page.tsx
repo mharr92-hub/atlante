@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Lead } from "@prisma/client";
-import { getProduct } from "@/content/catalog";
+import { getIntegrationStatus } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
 import { money } from "@/lib/format";
+import { productLabels } from "@/lib/catalog";
 
 interface Summary {
   created: number;
@@ -11,12 +12,7 @@ interface Summary {
   amount: number;
   commission: number;
   recent: Lead[];
-}
-
-/** Nombre legible de un lead: producto del catálogo o el slug guardado. */
-function productLabel(slug: string | null): string {
-  if (!slug) return "—";
-  return getProduct(slug)?.name.es ?? slug;
+  label: (slug: string) => string;
 }
 
 /** Todo el acceso a datos ocurre aquí: el render nunca va dentro de try/catch. */
@@ -28,6 +24,7 @@ async function loadSummary(): Promise<Summary | null> {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   try {
+    const label = await productLabels();
     const [created, redirected, paid, agg, recent] = await Promise.all([
       db.lead.count({ where: { createdAt: { gte: monthStart } } }),
       db.lead.count({ where: { createdAt: { gte: monthStart }, redirectedAt: { not: null } } }),
@@ -46,19 +43,36 @@ async function loadSummary(): Promise<Summary | null> {
       amount: Number(agg._sum.amount ?? 0),
       commission: Number(agg._sum.commissionAmount ?? 0),
       recent,
+      label,
     };
   } catch {
     return null;
   }
 }
 
+/** El modo nunca sale al sitio público: sólo se informa aquí (bloque 3.3). */
+function ModeNotice({ mode, feed }: { mode: string; feed: boolean }) {
+  return (
+    <div className="admin-panel">
+      <p className="admin-empty" style={{ margin: 0 }}>
+        <strong>Modo: {mode}</strong> · <code>PEX_FEED_URL</code>{" "}
+        {feed ? "configurado" : "sin configurar"}.{" "}
+        {mode === "puente"
+          ? "El funnel usa el horario del catálogo y la disponibilidad se confirma en Pacific Experience."
+          : "El funnel muestra fechas y cupos reales del feed y enlaza al checkout con la salida elegida."}
+      </p>
+    </div>
+  );
+}
+
 export default async function AdminHome() {
-  const summary = await loadSummary();
+  const [summary, status] = await Promise.all([loadSummary(), getIntegrationStatus()]);
 
   if (!summary) {
     return (
       <div>
         <h1 className="admin-h1">Resumen</h1>
+        <ModeNotice mode={status.mode} feed={status.feedConfigured} />
         <div className="admin-panel">
           <p className="admin-empty">
             No hay datos de leads: falta <code>DATABASE_URL</code> o la base no responde. El sitio
@@ -73,6 +87,8 @@ export default async function AdminHome() {
   return (
     <div>
       <h1 className="admin-h1">Resumen del mes</h1>
+
+      <ModeNotice mode={status.mode} feed={status.feedConfigured} />
 
       <div className="stat-row">
         <div className="stat-card">
@@ -125,7 +141,11 @@ export default async function AdminHome() {
                   <tr key={lead.id}>
                     <td>{lead.createdAt.toISOString().slice(0, 10)}</td>
                     <td>{lead.name}</td>
-                    <td>{productLabel(lead.productSlug ?? lead.vesselSlug)}</td>
+                    <td>
+                      {lead.productSlug ?? lead.vesselSlug
+                        ? summary.label((lead.productSlug ?? lead.vesselSlug) as string)
+                        : "—"}
+                    </td>
                     <td>{lead.paxTotal ?? "—"}</td>
                     <td>
                       <span className={`pill pill-${lead.status}`}>{lead.status}</span>

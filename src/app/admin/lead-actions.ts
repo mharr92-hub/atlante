@@ -2,17 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
+import { commissionPctFor } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
-
-/** Comisión por defecto de Atlante sobre PEX (PENDIENTE MARK: 20 % propuesto). */
-function commissionPct(): number {
-  const raw = Number(process.env.ATLANTE_COMMISSION_PCT);
-  return Number.isFinite(raw) && raw >= 0 && raw <= 100 ? raw : 20;
-}
 
 function refresh() {
   revalidatePath("/admin");
   revalidatePath("/admin/leads");
+  revalidatePath("/admin/comisiones");
 }
 
 /**
@@ -29,7 +25,14 @@ export async function markLeadPaidAction(formData: FormData) {
   const amount = Number(formData.get("amount"));
   if (!id || !Number.isFinite(amount) || amount < 0) return;
 
-  const pct = commissionPct();
+  // La comisión del producto manda; sin ella, `ATLANTE_COMMISSION_PCT`.
+  const lead = await db.lead.findUnique({
+    where: { id },
+    select: { productSlug: true, vesselSlug: true },
+  });
+  if (!lead) return;
+  const pct = await commissionPctFor(lead.productSlug ?? lead.vesselSlug);
+
   await db.lead.update({
     where: { id },
     data: {

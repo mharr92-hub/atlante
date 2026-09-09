@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { catalog, getProduct } from "@/content/catalog";
+import { getProducts, productLabels } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
 import { money } from "@/lib/format";
 import {
@@ -14,21 +14,20 @@ import {
   saveLeadNoteAction,
 } from "@/app/admin/lead-actions";
 
-function productLabel(slug: string | null): string {
-  if (!slug) return "—";
-  return getProduct(slug)?.name.es ?? slug;
-}
-
 /** Plantilla de rescate del abandono (PRD 5.2). */
-function rescueUrl(lead: {
-  phone: string;
-  name: string;
-  productSlug: string | null;
-  vesselSlug: string | null;
-  serviceDate: Date | null;
-  destinationUrl: string | null;
-}): string {
-  const product = productLabel(lead.productSlug ?? lead.vesselSlug);
+function rescueUrl(
+  lead: {
+    phone: string;
+    name: string;
+    productSlug: string | null;
+    vesselSlug: string | null;
+    serviceDate: Date | null;
+    destinationUrl: string | null;
+  },
+  label: (slug: string) => string,
+): string {
+  const slug = lead.productSlug ?? lead.vesselSlug;
+  const product = slug ? label(slug) : "tu experiencia";
   const date = lead.serviceDate ? lead.serviceDate.toISOString().slice(0, 10) : "tu fecha";
   const text =
     `Hola ${lead.name}, soy del equipo de Atlante del Pacífico. ` +
@@ -58,6 +57,8 @@ export default async function AdminLeads({
       </div>
     );
   }
+
+  const [products, label] = await Promise.all([getProducts(), productLabels()]);
 
   let leads: Awaited<ReturnType<typeof db.lead.findMany>> = [];
   let failed = false;
@@ -107,7 +108,7 @@ export default async function AdminLeads({
             Producto
             <select name="productSlug" defaultValue={search.productSlug ?? ""}>
               <option value="">Todos</option>
-              {catalog.map((p) => (
+              {products.map((p) => (
                 <option key={p.slug} value={p.slug}>
                   {p.name.es}
                 </option>
@@ -171,7 +172,9 @@ export default async function AdminLeads({
                       </span>
                     </td>
                     <td>
-                      {productLabel(lead.productSlug ?? lead.vesselSlug)}
+                      {lead.productSlug ?? lead.vesselSlug
+                        ? label((lead.productSlug ?? lead.vesselSlug) as string)
+                        : "—"}
                       {lead.partnerCode ? (
                         <>
                           <br />
@@ -199,7 +202,7 @@ export default async function AdminLeads({
                         {lead.phone ? (
                           <a
                             className="btn-sm btn-confirm"
-                            href={rescueUrl(lead)}
+                            href={rescueUrl(lead, label)}
                             target="_blank"
                             rel="noreferrer"
                           >

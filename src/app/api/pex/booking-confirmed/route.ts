@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
+import { commissionPctFor, defaultCommissionPct } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -20,12 +21,6 @@ export const dynamic = "force-dynamic";
  */
 
 const MAX_SKEW_MS = 5 * 60 * 1000;
-const COMMISSION_PCT_DEFAULT = 20;
-
-function commissionPct(): number {
-  const raw = Number(process.env.ATLANTE_COMMISSION_PCT);
-  return Number.isFinite(raw) && raw >= 0 && raw <= 100 ? raw : COMMISSION_PCT_DEFAULT;
-}
 
 function signatureOk(timestamp: string, rawBody: string, provided: string | null): boolean {
   const secret = process.env.PEX_WEBHOOK_SECRET ?? "";
@@ -140,10 +135,15 @@ async function findLead(db: Db, body: WebhookBody) {
 async function handlePaid(db: Db, body: WebhookBody, bookingId: string) {
   const amount = Number(body.amount);
   const paidAmount = Number.isFinite(amount) && amount >= 0 ? amount : 0;
-  const pct = commissionPct();
-  const commissionAmount = Math.round(((paidAmount * pct) / 100) * 100) / 100;
 
   const lead = await findLead(db, body);
+
+  // La comisión del producto manda sobre `ATLANTE_COMMISSION_PCT`; un pago sin
+  // lead no tiene producto conocido, así que se le aplica la global.
+  const pct = lead
+    ? await commissionPctFor(lead.productSlug ?? lead.vesselSlug)
+    : defaultCommissionPct();
+  const commissionAmount = Math.round(((paidAmount * pct) / 100) * 100) / 100;
 
   if (!lead) {
     // Pago sin lead: se registra para revisión manual, sin correo en claro.
