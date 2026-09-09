@@ -19,6 +19,8 @@ import { vesselDestination } from "@/lib/destination";
 import { getDb } from "@/lib/db";
 import { cleanEmail, cleanName, LeadValidationError, normalizePhone } from "@/lib/leads";
 import { notifyNewLead } from "@/lib/notify";
+import { normalizePartnerCode, pickPartnerCode } from "@/lib/partner-codes";
+import { resolvePartnerCode } from "@/lib/partners";
 import { durationsOf, rowForGroup } from "@/lib/vessel-pricing";
 import { getVessel } from "@/lib/vessels";
 import type { Attribution } from "@/lib/attribution";
@@ -123,10 +125,9 @@ export async function parseVesselLeadInput(
     name: cleanName(String(raw.name ?? "")),
     email: cleanEmail(String(raw.email ?? "")),
     phone,
-    partnerCode:
-      typeof raw.partnerCode === "string" && raw.partnerCode.trim()
-        ? raw.partnerCode.trim().slice(0, 40)
-        : undefined,
+    // Sólo se normaliza: la validación contra `Reseller` ocurre al guardar,
+    // porque necesita la base de datos (bloque 5.1).
+    partnerCode: normalizePartnerCode(raw.partnerCode) ?? undefined,
     accepted: true,
   };
 
@@ -170,6 +171,12 @@ export async function createVesselLead(
   }
 
   try {
+    // El código del formulario manda sobre el de la cookie, y sólo se guarda si
+    // hay un `Reseller` activo con ese código; si no, se ignora sin error.
+    const partnerCode = await resolvePartnerCode(
+      pickPartnerCode(input.partnerCode, attribution.partnerCode),
+    );
+
     const token = randomBytes(32).toString("hex");
     const lead = await db.lead.create({
       data: {
@@ -184,7 +191,7 @@ export async function createVesselLead(
         name: input.name,
         email: input.email,
         phone: input.phone,
-        partnerCode: input.partnerCode ?? attribution.partnerCode ?? null,
+        partnerCode,
         utmSource: attribution.utmSource ?? null,
         utmMedium: attribution.utmMedium ?? null,
         utmCampaign: attribution.utmCampaign ?? null,

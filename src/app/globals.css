@@ -1102,6 +1102,23 @@ textarea {
   font-size: 13px;
   color: #8c1f1f;
 }
+/* Aviso corto dentro de una celda (bloque 5: aliado sin porcentaje fijado). */
+.admin-warn-inline {
+  font-size: 13px;
+  font-weight: 700;
+  color: #8c1f1f;
+}
+/* Enlace de invitación de un aliado, con su botón "Copiar" (bloque 5.1). */
+.admin-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-copy code {
+  font-size: 13px;
+  word-break: break-all;
+}
 
 .admin-login {
   display: grid;

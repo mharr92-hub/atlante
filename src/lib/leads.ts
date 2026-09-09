@@ -8,6 +8,8 @@ import { findSlot, slotsAreFresh, type SlotOption } from "@/lib/slots";
 import { pexDestination } from "@/lib/destination";
 import { getDb } from "@/lib/db";
 import { notifyNewLead } from "@/lib/notify";
+import { normalizePartnerCode, pickPartnerCode } from "@/lib/partner-codes";
+import { resolvePartnerCode } from "@/lib/partners";
 import type { Attribution } from "@/lib/attribution";
 
 /** Minutos de vida del token de handoff (PRD 5.4). */
@@ -198,10 +200,9 @@ export async function parseLeadInput(
     name: cleanName(String(raw.name ?? "")),
     email: cleanEmail(String(raw.email ?? "")),
     phone,
-    partnerCode:
-      typeof raw.partnerCode === "string" && raw.partnerCode.trim()
-        ? raw.partnerCode.trim().slice(0, 40)
-        : undefined,
+    // Sólo se normaliza: la validación contra `Reseller` ocurre al guardar,
+    // porque necesita la base de datos (bloque 5.1).
+    partnerCode: normalizePartnerCode(raw.partnerCode) ?? undefined,
     accepted: true,
   };
 
@@ -259,6 +260,12 @@ export async function createLead(
   }
 
   try {
+    // El código del formulario manda sobre el de la cookie, y sólo se guarda si
+    // hay un `Reseller` activo con ese código; si no, se ignora sin error.
+    const partnerCode = await resolvePartnerCode(
+      pickPartnerCode(input.partnerCode, attribution.partnerCode),
+    );
+
     const token = randomBytes(32).toString("hex");
     const data: Prisma.LeadCreateInput = {
       type: TYPE_BY_KIND[product.kind],
@@ -273,7 +280,7 @@ export async function createLead(
       name: input.name,
       email: input.email,
       phone: input.phone,
-      partnerCode: input.partnerCode ?? attribution.partnerCode ?? null,
+      partnerCode,
       utmSource: attribution.utmSource ?? null,
       utmMedium: attribution.utmMedium ?? null,
       utmCampaign: attribution.utmCampaign ?? null,

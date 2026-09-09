@@ -59,6 +59,8 @@ export interface PaidLead {
   vesselSlug: string | null;
   amount: number;
   commissionAmount: number;
+  /** Código del aliado que trajo el lead, si lo hubo (bloque 5.1). */
+  partnerCode?: string | null;
 }
 
 export interface CommissionRow {
@@ -124,6 +126,107 @@ export function summarizeCommissions(
       amount,
       commission,
       effectivePct: pct(commission, amount),
+    },
+  };
+}
+
+// ------------------------------------------- reparto con aliados (bloque 5) --
+
+/**
+ * Reparto de la comisión con los aliados (bloque 5.1).
+ *
+ *   comisión de Atlante = monto × `commissionPct`  → ya viene guardada en el lead
+ *   parte del aliado    = monto × `Reseller.commissionPercent`
+ *   neto de Atlante     = comisión − parte del aliado
+ *
+ * Los dos porcentajes se aplican sobre el MONTO de la reserva, no uno sobre el
+ * otro: es lo que fija el bloque 5.1. Qué porcentaje lleva cada aliado lo decide
+ * Mark en `/admin/aliados`; no hay reparto por defecto (PENDIENTE MARK).
+ */
+
+/** Lo que se sabe del aliado al armar el reporte. */
+export interface PartnerShare {
+  name: string;
+  /** `Reseller.commissionPercent`. */
+  commissionPercent: number;
+}
+
+export interface PartnerCommissionRow {
+  /** Código del aliado; cadena vacía en la fila "sin aliado". */
+  code: string;
+  label: string;
+  leads: number;
+  amount: number;
+  /** Comisión bruta de Atlante (la guardada en el lead). */
+  commission: number;
+  /** `Reseller.commissionPercent`, o `null` si el código no resuelve. */
+  partnerPct: number | null;
+  /** monto × `partnerPct`, o `null` si no se conoce el porcentaje. */
+  partnerShare: number | null;
+  /** comisión − parte del aliado, o `null` si el reparto no se puede calcular. */
+  net: number | null;
+}
+
+const NO_PARTNER = "(sin aliado)";
+
+export function summarizePartnerCommissions(
+  leads: PaidLead[],
+  partner: (code: string) => PartnerShare | null | undefined = () => null,
+): { rows: PartnerCommissionRow[]; total: PartnerCommissionRow; unresolved: number } {
+  const byCode = new Map<string, PartnerCommissionRow>();
+
+  for (const lead of leads) {
+    const code = (lead.partnerCode ?? "").trim();
+    const row = byCode.get(code) ?? {
+      code,
+      label: code ? (partner(code)?.name ?? code) : NO_PARTNER,
+      leads: 0,
+      amount: 0,
+      commission: 0,
+      // Sin aliado no hay nada que repartir: 0 conocido, no "se desconoce".
+      partnerPct: code ? (partner(code)?.commissionPercent ?? null) : null,
+      partnerShare: null,
+      net: null,
+    };
+    row.leads += 1;
+    row.amount = round2(row.amount + lead.amount);
+    row.commission = round2(row.commission + lead.commissionAmount);
+    byCode.set(code, row);
+  }
+
+  let unresolved = 0;
+  const rows = [...byCode.values()]
+    .map((row) => {
+      if (!row.code) {
+        return { ...row, partnerShare: 0, net: row.commission };
+      }
+      if (row.partnerPct === null) {
+        // Código sin aliado activo que lo respalde: no se inventa el reparto.
+        unresolved += 1;
+        return row;
+      }
+      const share = round2((row.amount * row.partnerPct) / 100);
+      return { ...row, partnerShare: share, net: round2(row.commission - share) };
+    })
+    .sort((a, b) => b.commission - a.commission || a.label.localeCompare(b.label));
+
+  const amount = round2(rows.reduce((sum, r) => sum + r.amount, 0));
+  const commission = round2(rows.reduce((sum, r) => sum + r.commission, 0));
+  const partnerShare = round2(rows.reduce((sum, r) => sum + (r.partnerShare ?? 0), 0));
+
+  return {
+    rows,
+    unresolved,
+    total: {
+      code: "",
+      label: "Total",
+      leads: rows.reduce((sum, r) => sum + r.leads, 0),
+      amount,
+      commission,
+      partnerPct: null,
+      partnerShare,
+      // Con un código sin resolver el neto no se puede afirmar: se muestra "—".
+      net: unresolved > 0 ? null : round2(commission - partnerShare),
     },
   };
 }

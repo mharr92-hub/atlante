@@ -6,24 +6,57 @@ import {
   PARTNER_COOKIE,
   UTM_COOKIE,
 } from "@/lib/attribution-cookies";
+import { normalizePartnerCode } from "@/lib/partner-codes";
 
 /**
  * Atribución de la primera visita.
  *
  * Guarda en cookies de 30 días de dónde vino la persona (`utm_*`), qué aliado
- * la mandó (`?partner=`) y por qué página entró, para que `POST /api/leads`
- * pueda copiarlo al lead aunque el funnel se complete tres páginas después.
+ * la mandó (`?partner=` o `?ref=`) y por qué página entró, para que
+ * `POST /api/leads` pueda copiarlo al lead aunque el funnel se complete tres
+ * páginas después.
  *
  * Sólo escribe si la cookie no existe: manda la PRIMERA visita, no la última.
  * Nunca guarda nombre, correo ni teléfono (regla 7): sólo campaña y ruta.
+ *
+ * El código del aliado se limpia de la URL con una redirección (bloque 5.1):
+ * el enlace de invitación `…/?partner=HOTELX` deja la cookie y la persona
+ * termina en la URL canónica, sin el parámetro. La cookie no es `httpOnly`
+ * porque el paso 3 del funnel la lee desde el navegador para prellenar el campo.
  *
  * Nota de Next.js 16: el archivo `middleware` está deprecado y se llama
  * `proxy`; la función exportada es `proxy`.
  */
 
+/** Parámetros de entrada de un aliado, en orden de prioridad. */
+const PARTNER_PARAMS = ["partner", "ref"] as const;
+
 export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const params = request.nextUrl.searchParams;
+
+  // `partner` manda sobre `ref`; `normalizePartnerCode` descarta `ATLANTE`, que
+  // es nuestro propio código en PEX y no pertenece a ningún aliado.
+  let partner: string | null = null;
+  let carriesParam = false;
+  for (const key of PARTNER_PARAMS) {
+    if (!params.has(key)) continue;
+    carriesParam = true;
+    partner = partner ?? normalizePartnerCode(params.get(key));
+  }
+
+  // Sólo se redirige en una navegación: un POST (acción de servidor) conserva
+  // su URL tal cual.
+  const clean =
+    carriesParam && (request.method === "GET" || request.method === "HEAD");
+
+  let response: NextResponse;
+  if (clean) {
+    const url = request.nextUrl.clone();
+    for (const key of PARTNER_PARAMS) url.searchParams.delete(key);
+    response = NextResponse.redirect(url, 307);
+  } else {
+    response = NextResponse.next();
+  }
 
   const options = {
     maxAge: ATTRIBUTION_MAX_AGE,
@@ -45,9 +78,8 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  const partner = params.get("partner");
   if (partner && !request.cookies.has(PARTNER_COOKIE)) {
-    response.cookies.set(PARTNER_COOKIE, partner.slice(0, 40), options);
+    response.cookies.set(PARTNER_COOKIE, partner, options);
   }
 
   if (!request.cookies.has(LANDING_COOKIE)) {

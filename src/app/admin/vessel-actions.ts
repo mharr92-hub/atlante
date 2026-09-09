@@ -15,12 +15,14 @@ import {
   slugifyKey,
 } from "@/lib/catalog-forms";
 import { parseOnRequestItems, parsePricingRows, parseRoutes } from "@/lib/vessel-forms";
-import { PARTNER_STATUSES } from "@/lib/partner-applications";
 
 /**
- * Admin del marketplace (bloque 4.3): operadores, naves y solicitudes de
- * aliados. Todo pasa por `requireAdmin()` y todo invalida la caché en proceso de
- * `lib/vessels.ts`, para que el cambio se vea en el sitio sin esperar los 60 s.
+ * Admin del marketplace (bloque 4.3): operadores y naves. Todo pasa por
+ * `requireAdmin()` y todo invalida la caché en proceso de `lib/vessels.ts`, para
+ * que el cambio se vea en el sitio sin esperar los 60 s.
+ *
+ * Las solicitudes de aliados y los códigos viven en
+ * `src/app/admin/partner-actions.ts` (bloque 5.1).
  *
  * `commissionPct`, el contrato, la licencia AMP y el seguro son internos: se
  * escriben aquí y no salen nunca a una página pública.
@@ -203,31 +205,4 @@ export async function markVesselVerifiedTodayAction(formData: FormData) {
     data: { verifiedAt: new Date(`${today}T00:00:00.000Z`) },
   });
   refresh(slug);
-}
-
-// --------------------------------------------------------------- aliados ----
-
-export async function setPartnerStatusAction(formData: FormData) {
-  await requireAdmin();
-  const db = getDb();
-  if (!db) return;
-
-  const id = text(formData, "id").trim();
-  const status = text(formData, "status").trim();
-  if (!id || !(PARTNER_STATUSES as readonly string[]).includes(status)) return;
-
-  await db.partnerApplication.update({ where: { id }, data: { status } });
-  revalidatePath("/admin/aliados");
-}
-
-export async function deletePartnerApplicationAction(formData: FormData) {
-  await requireAdmin();
-  const db = getDb();
-  if (!db) return;
-
-  const id = text(formData, "id").trim();
-  if (!id) return;
-
-  await db.partnerApplication.delete({ where: { id } });
-  revalidatePath("/admin/aliados");
 }

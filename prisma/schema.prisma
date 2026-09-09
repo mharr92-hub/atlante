@@ -213,7 +213,11 @@ model GiftCard {
   createdAt     DateTime  @default(now())
 }
 
-/// Partner / affiliate accounts (hotels, agencies) with commission tracking.
+/// Aliado que recomienda Atlante con su propio código (R3, bloque 5).
+///
+/// El código viaja en `?partner=CODE` (o `?ref=CODE`), se guarda 30 días en la
+/// cookie `atl_partner` y termina en `Lead.partnerCode`. PEX no lo conoce: a PEX
+/// siempre le llega `ref=ATLANTE`; el reparto se calcula en `/admin/comisiones`.
 model Reseller {
   id               String   @id @default(uuid())
   name             String
@@ -221,7 +225,13 @@ model Reseller {
   referralCode     String   @unique
   commissionPercent Decimal @db.Decimal(5, 2)
   active           Boolean  @default(true)
+  /// hotel | agency | organizer | operator — quién recomienda.
+  kind             String   @default("hotel")
+  whatsapp         String?
+  notes            String?
   createdAt        DateTime @default(now())
+
+  @@index([active])
 }
 
 // ============================================================================
