@@ -5,7 +5,7 @@ import type { Product } from "@/content/catalog";
 import { getProduct, getProductSlots } from "@/lib/catalog";
 import { computeTotal, decodePax, maxPax, minPax, paxTotal, priceRows, type Pax } from "@/lib/funnel";
 import { findSlot, slotsAreFresh, type SlotOption } from "@/lib/slots";
-import { buildPexUrl } from "@/lib/pex";
+import { pexDestination } from "@/lib/destination";
 import { getDb } from "@/lib/db";
 import { notifyNewLead } from "@/lib/notify";
 import type { Attribution } from "@/lib/attribution";
@@ -210,18 +210,7 @@ export async function parseLeadInput(
 
 // --------------------------------------------------------------- destino ----
 
-/** `trip_id` de PEX del producto, o `null` si es una nave o no se conoce. */
-function tripIdOf(product: Product): string | null {
-  return product.pexCheckout?.kind === "tour" ? product.pexCheckout.tripId : null;
-}
-
-/**
- * A dónde se manda a la persona.
- *
- * Modo integrado (3.3): con salida real del feed y `trip_id` conocido, deep link
- * directo al checkout de PEX con `slot_id`, `date` y `tickets`.
- * Modo puente: la página del producto (o el checkout de la nave), como en R1.
- */
+/** Firma posicional histórica sobre `pexDestination()` (`lib/destination.ts`). */
 export function destinationFor(
   product: Product,
   addons: string[],
@@ -230,33 +219,7 @@ export function destinationFor(
   slot?: SlotOption | null,
   tickets?: number,
 ): string {
-  const isCharter = product.kind === "charter_pex";
-  const tripId = tripIdOf(product);
-
-  if (!isCharter && slot && tripId) {
-    return buildPexUrl({
-      target: "tour_checkout",
-      tripId,
-      slotId: slot.id,
-      date: slot.date,
-      tickets,
-      addons,
-      leadId,
-      handoffToken,
-      campaign: product.slug,
-    });
-  }
-
-  return buildPexUrl({
-    target: isCharter ? "charter_checkout" : "tour_page",
-    path: product.pexPath,
-    vessel:
-      product.pexCheckout?.kind === "charter" ? product.pexCheckout.vessel : undefined,
-    addons,
-    leadId,
-    handoffToken,
-    campaign: product.slug,
-  });
+  return pexDestination(product, { addons, leadId, handoffToken, slot, tickets });
 }
 
 const TYPE_BY_KIND = {

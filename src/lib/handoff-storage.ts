@@ -6,7 +6,7 @@
  * ni en un `Referer` (regla 7 / principio 6).
  */
 import type { Product } from "@/content/catalog";
-import { buildPexUrl } from "@/lib/pex";
+import { pexDestination } from "@/lib/destination";
 import type { Pax } from "@/lib/funnel";
 
 export const HANDOFF_KEY = "atl_handoff";
@@ -32,14 +32,8 @@ export interface HandoffPayload {
  * persona recargó `/listo`. Lleva `ref=ATLANTE` igual, sin `ref_id`.
  */
 export function destinationFallback(product: Product, addons: string[] = []): string {
-  const isCharter = product.kind === "charter_pex";
-  return buildPexUrl({
-    target: isCharter ? "charter_checkout" : "tour_page",
-    path: product.pexPath,
-    vessel: product.pexCheckout?.kind === "charter" ? product.pexCheckout.vessel : undefined,
-    addons,
-    campaign: product.slug,
-  });
+  // Sin lead no hay salida validada en el servidor: se va en modo puente.
+  return pexDestination(product, { addons });
 }
 
 export function readHandoff(): HandoffPayload | null {

@@ -1,8 +1,16 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { commissionPctFor, defaultCommissionPct } from "@/lib/catalog";
 import { getDb } from "@/lib/db";
+import {
+  commissionFor,
+  isDuplicateEvent,
+  isRevertEvent,
+  parseWebhookBody,
+  sha256,
+  verifyWebhook,
+  type WebhookBody,
+} from "@/lib/pex-webhook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,71 +18,35 @@ export const dynamic = "force-dynamic";
 /**
  * Webhook de confirmación de Pacific Experience (PRD 5.5).
  *
- * Esqueleto listo para el bloque 3: PEX todavía no lo dispara (cambio X5 de su
- * lado). Ya valida firma, ventana de tiempo e idempotencia, para que cuando
- * llegue el primer evento real no haya nada que improvisar.
+ * PEX todavía no lo dispara (cambio X5 de su lado). Ya valida firma, ventana de
+ * tiempo e idempotencia — todo eso vive en `lib/pex-webhook.ts`, probado sin
+ * base de datos — para que cuando llegue el primer evento real no haya nada que
+ * improvisar.
  *
  * Cuerpo esperado:
  *   { event, pex_booking_id, ref, ref_id, product, service_date, tickets,
  *     amount, currency, paid_at, customer_email_sha256 }
  * Sin datos de tarjeta y sin nombre: el correo llega hasheado.
  */
-
-const MAX_SKEW_MS = 5 * 60 * 1000;
-
-function signatureOk(timestamp: string, rawBody: string, provided: string | null): boolean {
-  const secret = process.env.PEX_WEBHOOK_SECRET ?? "";
-  if (!secret || !provided) return false;
-  const expected = createHmac("sha256", secret).update(`${timestamp}.${rawBody}`).digest("hex");
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-interface WebhookBody {
-  event?: string;
-  pex_booking_id?: string;
-  ref_id?: string;
-  service_date?: string;
-  amount?: number;
-  customer_email_sha256?: string;
-  product?: { name?: string };
-}
-
 export async function POST(request: Request) {
-  if (!process.env.PEX_WEBHOOK_SECRET) {
-    return NextResponse.json({ ok: false, error: "not_configured" }, { status: 503 });
-  }
-
-  const timestamp = request.headers.get("x-pex-timestamp") ?? "";
-  const signature = request.headers.get("x-pex-signature");
+  const secret = process.env.PEX_WEBHOOK_SECRET ?? "";
   const rawBody = await request.text();
 
-  const ts = Number(timestamp);
-  if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > MAX_SKEW_MS) {
-    return NextResponse.json({ ok: false, error: "stale_timestamp" }, { status: 400 });
-  }
-  if (!signatureOk(timestamp, rawBody, signature)) {
-    return NextResponse.json({ ok: false, error: "bad_signature" }, { status: 401 });
-  }
-
-  let body: WebhookBody;
-  try {
-    body = JSON.parse(rawBody) as WebhookBody;
-  } catch {
-    return NextResponse.json({ ok: false, error: "bad_json" }, { status: 400 });
+  const check = verifyWebhook({
+    timestamp: request.headers.get("x-pex-timestamp"),
+    signature: request.headers.get("x-pex-signature"),
+    rawBody,
+    secret,
+  });
+  if (!check.ok) {
+    return NextResponse.json({ ok: false, error: check.error }, { status: check.status });
   }
 
-  const event = body.event ?? "";
-  const bookingId = body.pex_booking_id ?? "";
-  if (!bookingId || !event) {
-    return NextResponse.json({ ok: false, error: "missing_fields" }, { status: 400 });
+  const parsed = parseWebhookBody(rawBody);
+  if (!parsed.ok) {
+    return NextResponse.json({ ok: false, error: parsed.error }, { status: parsed.status });
   }
+  const { body, event, bookingId } = parsed;
 
   const db = getDb();
   if (!db) return NextResponse.json({ ok: false, error: "no_database" }, { status: 503 });
@@ -90,18 +62,14 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    if ((error as { code?: string }).code === "P2002") {
-      return NextResponse.json({ ok: true, duplicate: true });
-    }
+    if (isDuplicateEvent(error)) return NextResponse.json({ ok: true, duplicate: true });
     console.error("[pex-webhook] no se pudo registrar el evento");
     return NextResponse.json({ ok: false, error: "unavailable" }, { status: 503 });
   }
 
   try {
     if (event === "booking.paid") await handlePaid(db, body, bookingId);
-    else if (event === "booking.cancelled" || event === "booking.refunded") {
-      await handleReverted(db, body, bookingId);
-    }
+    else if (isRevertEvent(event)) await handleReverted(db, body, bookingId);
   } catch {
     console.error("[pex-webhook] no se pudo aplicar el evento al lead");
     return NextResponse.json({ ok: false, error: "unavailable" }, { status: 503 });
@@ -143,7 +111,7 @@ async function handlePaid(db: Db, body: WebhookBody, bookingId: string) {
   const pct = lead
     ? await commissionPctFor(lead.productSlug ?? lead.vesselSlug)
     : defaultCommissionPct();
-  const commissionAmount = Math.round(((paidAmount * pct) / 100) * 100) / 100;
+  const commissionAmount = commissionFor(paidAmount, pct);
 
   if (!lead) {
     // Pago sin lead: se registra para revisión manual, sin correo en claro.

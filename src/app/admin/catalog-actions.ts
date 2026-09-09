@@ -39,6 +39,8 @@ function refresh(slug?: string) {
   revalidatePath("/tours");
   revalidatePath("/charters");
   revalidatePath("/");
+  // El sitemap lista las fichas disponibles: si se apaga un producto, sale.
+  revalidatePath("/sitemap.xml");
 }
 
 function text(form: FormData, key: string): string {
