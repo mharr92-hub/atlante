@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { L, type Locale } from "@/lib/i18n";
+import { L, t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import { ATLANTE_REF_CODE, PEX_BRAND, PEX_DOMAIN_LABEL, buildPexUrl } from "@/lib/pex";
 import LegalShell from "@/components/site/LegalShell";
 
-export const metadata: Metadata = {
-  title: "Cómo funciona",
-  description:
-    "Eliges tu experiencia, escoges fecha y pasajeros, dejas tus datos y completas el pago directo con el operador. Atlante nunca cobra.",
-  alternates: { canonical: "/como-funciona" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_how_title", locale),
+    description: t("meta_how_desc", locale),
+    alternates: await pageAlternates("/como-funciona"),
+  };
+}
 
 const copy = {
   title: { es: "Cómo funciona", en: "How it works" },
@@ -57,8 +59,7 @@ const copy = {
 } as const;
 
 export default async function ComoFuncionaPage() {
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return (
     <LegalShell locale={locale} title={L(copy.title, locale)}>

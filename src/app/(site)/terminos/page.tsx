@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { site, whatsappUrl } from "@/config/site";
-import { L, type Locale } from "@/lib/i18n";
+import { site, whatsappGreeting, whatsappUrl } from "@/config/site";
+import { L, t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import { PEX_BRAND } from "@/lib/pex";
 import LegalShell from "@/components/site/LegalShell";
 
-export const metadata: Metadata = {
-  title: "Términos y condiciones",
-  description:
-    "Rol de Atlante del Pacífico como intermediario: quién presta el servicio, quién cobra y qué condiciones aplican a cada reserva.",
-  alternates: { canonical: "/terminos" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_terms_title", locale),
+    description: t("meta_terms_desc", locale),
+    alternates: await pageAlternates("/terminos"),
+  };
+}
 
 const copy = {
   title: { es: "Términos y condiciones", en: "Terms and conditions" },
@@ -62,8 +64,7 @@ const copy = {
 } as const;
 
 export default async function TerminosPage() {
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return (
     <LegalShell locale={locale} title={L(copy.title, locale)}>
@@ -79,7 +80,11 @@ export default async function TerminosPage() {
         <h2>{L(copy.contact.h, locale)}</h2>
         <p>
           {L(copy.contact.p, locale)}
-          <a href={whatsappUrl()} target="_blank" rel="noreferrer">
+          <a
+            href={whatsappUrl(whatsappGreeting(locale))}
+            target="_blank"
+            rel="noreferrer"
+          >
             {site.whatsapp.display}
           </a>
           .

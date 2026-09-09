@@ -137,17 +137,23 @@ a {
   overflow: hidden;
 }
 
-.lang-toggle button {
-  padding: 6px 10px;
+/* Desde el bloque 6.2 el selector son dos enlaces a la misma página en el otro
+   idioma, no dos botones: el área táctil se mantiene en 44 px de alto. */
+.lang-toggle a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
   background: transparent;
   color: inherit;
   border: 0;
   cursor: pointer;
   font: inherit;
+  text-decoration: none;
   opacity: 0.6;
 }
 
-.lang-toggle button.is-active {
+.lang-toggle a.is-active {
   background: var(--gold);
   color: var(--ink);
   opacity: 1;

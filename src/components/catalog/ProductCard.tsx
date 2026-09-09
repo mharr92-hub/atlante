@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
 import { L, t, weekdaysLabel, type DictKey } from "@/lib/i18n";

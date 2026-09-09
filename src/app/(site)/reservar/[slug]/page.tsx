@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import { getProduct, getProductSlots, getTicketProducts } from "@/lib/catalog";
 import { slotsAreFresh } from "@/lib/slots";
-import { site } from "@/config/site";
-import { L, type Locale } from "@/lib/i18n";
+import { L, tf } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import Funnel from "@/components/funnel/Funnel";
 
 export async function generateStaticParams() {
@@ -21,12 +20,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return {};
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
   return {
-    title: `Reservar ${L(product.name, locale)}`,
+    title: tf("meta_book_title", locale, { name: L(product.name, locale) }),
     description: L(product.summary, locale),
-    alternates: { canonical: `${site.url}/reservar/${product.slug}` },
+    alternates: await pageAlternates(`/reservar/${product.slug}`),
   };
 }
 

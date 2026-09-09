@@ -12,8 +12,16 @@ export const site = {
   tagline: "del Pacifico",
   domain: "www.atlantedelpacifico.lat",
   url: "https://www.atlantedelpacifico.lat",
-  description:
-    "Atlante del Pacifico conecta viajeros con tours curados y charters privados de yate desde Ciudad de Panama, Taboga y Las Perlas.",
+  // ES/EN desde el bloque 6.2: el título y la descripción del sitio también
+  // cambian con el idioma de la URL.
+  titleSuffix: {
+    es: "Tours y charters privados en Panama",
+    en: "Private tours and charters in Panama",
+  },
+  description: {
+    es: "Atlante del Pacifico conecta viajeros con tours curados y charters privados de yate desde Ciudad de Panama, Taboga y Las Perlas.",
+    en: "Atlante del Pacifico connects travelers with curated tours and private yacht charters from Panama City, Taboga and Las Perlas.",
+  },
   location: "Marina Flamenco - Amador, Panama",
   // Marina Flamenco, Amador causeway
   geo: { lat: 8.9096, lng: -79.5253 },
@@ -21,8 +29,10 @@ export const site = {
     // E.164 without the + sign, as wa.me expects
     number: "50768603623",
     display: "+507 6860 3623",
-    defaultMessage:
-      "Hola Atlante, quiero informacion sobre tours o charters en Panama.",
+    defaultMessage: {
+      es: "Hola Atlante, quiero informacion sobre tours o charters en Panama.",
+      en: "Hi Atlante, I would like information about tours or charters in Panama.",
+    },
   },
   social: {
     // PENDIENTE MARK: no verificado que la cuenta exista.
@@ -40,7 +50,15 @@ export const navItems: NavItem[] = [
   { href: "/#contacto", labelEs: "Contacto", labelEn: "Contact" },
 ];
 
+/**
+ * The default greeting, in the page language (block 6.2). Spanish is the
+ * fallback because it is the site's default locale.
+ */
+export function whatsappGreeting(locale: "es" | "en" = "es"): string {
+  return site.whatsapp.defaultMessage[locale] ?? site.whatsapp.defaultMessage.es;
+}
+
 /** Build a wa.me deep link with a pre-filled message. */
-export function whatsappUrl(message: string = site.whatsapp.defaultMessage): string {
+export function whatsappUrl(message: string = whatsappGreeting()): string {
   return `https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(message)}`;
 }

@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import CompareTable from "@/components/charters/CompareTable";
 import { getVessels } from "@/lib/vessels";
+import { t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 
-export const metadata: Metadata = {
-  title: "Comparar naves",
-  description:
-    "Compara hasta cuatro naves lado a lado: capacidad, precio por 4, 8 y 12 horas, precio por persona para tu grupo, qué incluye, apartado y política de cancelación.",
-  alternates: { canonical: "/charters/comparar" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_compare_title", locale),
+    description: t("meta_compare_desc", locale),
+    alternates: await pageAlternates("/charters/comparar"),
+  };
+}
 
 export default async function CompararPage() {
   const vessels = await getVessels();

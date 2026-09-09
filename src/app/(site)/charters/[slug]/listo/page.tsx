@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CharterListo from "@/components/charters/CharterListo";
 import { getVessel } from "@/lib/vessels";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
 
 // Pantalla de tránsito: no se indexa (PRD 5.1) y siempre se renderiza fresca.
-export const metadata: Metadata = {
-  title: "Te llevamos a Pacific Experience",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: t("meta_listo_title", await getLocale()),
+    robots: { index: false, follow: false },
+    alternates: { canonical: null },
+  };
+}
 
 export const dynamic = "force-dynamic";
 

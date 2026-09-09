@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/content/catalog";
 import { useLocale } from "@/lib/locale-context";
+import { localeHref } from "@/lib/locale-routing";
 import { L, formatDate, t, tf } from "@/lib/i18n";
 import { money, priceFromLabel } from "@/lib/format";
 import {
@@ -211,7 +212,9 @@ export default function Funnel({
       value: total,
     });
 
-    router.push(`/reservar/${product.slug}/listo${leadId ? `?lead=${leadId}` : ""}`);
+    router.push(
+      localeHref(`/reservar/${product.slug}/listo${leadId ? `?lead=${leadId}` : ""}`, locale),
+    );
   }
 
   async function submit(event: React.FormEvent) {

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import PartnerForm from "@/components/charters/PartnerForm";
+import { t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 
-export const metadata: Metadata = {
-  title: "Registro de aliados",
-  description:
-    "Publica tu embarcación en Atlante del Pacífico o súmate como hotel, concierge o agencia. Revisamos cada solicitud antes de publicar la ficha.",
-  alternates: { canonical: "/aliados/registro" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_signup_title", locale),
+    description: t("meta_signup_desc", locale),
+    alternates: await pageAlternates("/aliados/registro"),
+  };
+}
 
 export default function AliadosRegistroPage() {
   return (

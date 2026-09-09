@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import { useEffect } from "react";
 import type { Operator, Vessel } from "@/content/vessels";
 import { useLocale } from "@/lib/locale-context";

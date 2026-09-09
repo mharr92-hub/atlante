@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import type { Vessel } from "@/content/vessels";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";

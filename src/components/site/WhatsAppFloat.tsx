@@ -1,13 +1,16 @@
 "use client";
 
-import { whatsappUrl } from "@/config/site";
+import { whatsappGreeting, whatsappUrl } from "@/config/site";
+import { useLocale } from "@/lib/locale-context";
 import { track } from "@/lib/analytics";
 
 export default function WhatsAppFloat() {
+  const { locale } = useLocale();
+
   return (
     <a
       className="wa-float"
-      href={whatsappUrl()}
+      href={whatsappUrl(whatsappGreeting(locale))}
       target="_blank"
       rel="noreferrer"
       aria-label="WhatsApp"

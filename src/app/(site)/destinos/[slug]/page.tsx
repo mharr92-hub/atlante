@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import { destinations, getDestination } from "@/content/destinations";
 import { getTicketProducts } from "@/lib/catalog";
 import { getOperators, getVessels } from "@/lib/vessels";
 import { productsForDestination, vesselsForDestination } from "@/lib/destinations";
 import { DEFAULT_PEOPLE, operatorSealVisible } from "@/lib/vessel-pricing";
 import { site } from "@/config/site";
-import { L, type Locale } from "@/lib/i18n";
+import { L } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import PexDisclosure from "@/components/site/PexDisclosure";
 import DestinationDetail from "@/components/destinations/DestinationDetail";
 
@@ -23,13 +23,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const destination = getDestination(slug);
   if (!destination) return {};
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return {
     title: L(destination.title, locale),
     description: L(destination.summary, locale),
-    alternates: { canonical: `${site.url}/destinos/${destination.slug}` },
+    alternates: await pageAlternates(`/destinos/${destination.slug}`),
   };
 }
 
@@ -51,7 +50,8 @@ export default async function DestinationPage({
   const destination = getDestination(slug);
   if (!destination) notFound();
 
-  const [tickets, vessels, operators] = await Promise.all([
+  const [locale, tickets, vessels, operators] = await Promise.all([
+    getLocale(),
     getTicketProducts(),
     getVessels(),
     getOperators(),
@@ -67,8 +67,8 @@ export default async function DestinationPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TouristDestination",
-    name: destination.name.es,
-    description: destination.summary.es,
+    name: L(destination.name, locale),
+    description: L(destination.summary, locale),
     url: `${site.url}/destinos/${destination.slug}`,
     address: { "@type": "PostalAddress", addressCountry: "PA" },
   };

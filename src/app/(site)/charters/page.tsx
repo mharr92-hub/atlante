@@ -5,13 +5,17 @@ import ChartersCatalog from "@/components/charters/ChartersCatalog";
 import { site } from "@/config/site";
 import { getOperators, getVessels } from "@/lib/vessels";
 import { operatorSealVisible } from "@/lib/vessel-pricing";
+import { t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 
-export const metadata: Metadata = {
-  title: "Charters — compara naves por capacidad y precio por persona",
-  description:
-    "Marketplace de charters en Ciudad de Panamá: capacidad, rutas, jornadas de 4, 8 y 12 horas y precio por persona calculado para tu grupo. El pago se completa con el operador.",
-  alternates: { canonical: "/charters" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_charters_title", locale),
+    description: t("meta_charters_desc", locale),
+    alternates: await pageAlternates("/charters"),
+  };
+}
 
 export default async function ChartersPage() {
   const [vessels, operators] = await Promise.all([getVessels(), getOperators()]);

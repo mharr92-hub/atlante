@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { site, whatsappUrl } from "@/config/site";
-import { L, type Locale } from "@/lib/i18n";
+import { site, whatsappGreeting, whatsappUrl } from "@/config/site";
+import { L, t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import { PEX_BRAND } from "@/lib/pex";
 import LegalShell from "@/components/site/LegalShell";
 
-export const metadata: Metadata = {
-  title: "Política de privacidad",
-  description:
-    "Qué datos pide Atlante del Pacífico, para qué los usa, cómo se transfieren al operador y cómo pedir su corrección o borrado.",
-  alternates: { canonical: "/privacidad" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_privacy_title", locale),
+    description: t("meta_privacy_desc", locale),
+    alternates: await pageAlternates("/privacidad"),
+  };
+}
 
 const copy = {
   title: { es: "Política de privacidad", en: "Privacy policy" },
@@ -66,8 +68,7 @@ const copy = {
 } as const;
 
 export default async function PrivacidadPage() {
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return (
     <LegalShell locale={locale} title={L(copy.title, locale)}>
@@ -83,7 +84,11 @@ export default async function PrivacidadPage() {
         <h2>{L(copy.contact.h, locale)}</h2>
         <p>
           {L(copy.contact.p, locale)}
-          <a href={whatsappUrl()} target="_blank" rel="noreferrer">
+          <a
+            href={whatsappUrl(whatsappGreeting(locale))}
+            target="_blank"
+            rel="noreferrer"
+          >
             {site.whatsapp.display}
           </a>
           .

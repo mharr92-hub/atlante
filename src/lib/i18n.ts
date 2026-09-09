@@ -444,6 +444,71 @@ export const dict = {
   },
   err_partner_name: { es: "Escribe el nombre.", en: "Enter the name." },
   err_generic: { es: "Revisa los datos e inténtalo de nuevo.", en: "Check the details and try again." },
+
+  // ------------------------------------- metadata de las páginas (6.2) ----
+  // El título y la descripción de cada ruta también viajan por el diccionario:
+  // `/tours` y `/en/tours` son la misma página en dos idiomas.
+  meta_tours_title: { es: "Tickets y tours", en: "Tickets and tours" },
+  meta_tours_desc: {
+    es: "Ferry, tours y party en la Bahía de Panamá operados por Pacific Experience, con su precio real. Eliges aquí y pagas en su checkout.",
+    en: "Ferry, tours and party cruises on the Bay of Panama operated by Pacific Experience, at their real price. You choose here and pay on their checkout.",
+  },
+  meta_charters_title: {
+    es: "Charters — compara naves por capacidad y precio por persona",
+    en: "Charters — compare vessels by capacity and price per person",
+  },
+  meta_charters_desc: {
+    es: "Marketplace de charters en Ciudad de Panamá: capacidad, rutas, jornadas de 4, 8 y 12 horas y precio por persona calculado para tu grupo. El pago se completa con el operador.",
+    en: "Charter marketplace in Panama City: capacity, routes, 4, 8 and 12-hour days and a price per person calculated for your group. Payment is completed with the operator.",
+  },
+  meta_compare_title: { es: "Comparar naves", en: "Compare vessels" },
+  meta_compare_desc: {
+    es: "Compara hasta cuatro naves lado a lado: capacidad, precio por 4, 8 y 12 horas, precio por persona para tu grupo, qué incluye, apartado y política de cancelación.",
+    en: "Compare up to four vessels side by side: capacity, price for 4, 8 and 12 hours, price per person for your group, what is included, deposit and cancellation policy.",
+  },
+  meta_partners_title: {
+    es: "Aliados — operadores, hoteles y agencias",
+    en: "Partners — operators, hotels and agencies",
+  },
+  meta_partners_desc: {
+    es: "Publica tu embarcación en el marketplace de Atlante, recomienda con código de aliado o arma paquetes con tarifa neta. Atlante no opera naves ni cobra al cliente.",
+    en: "List your vessel on Atlante's marketplace, refer with a partner code or build packages at net rates. Atlante operates no vessels and never charges the customer.",
+  },
+  meta_signup_title: { es: "Registro de aliados", en: "Partner sign-up" },
+  meta_signup_desc: {
+    es: "Publica tu embarcación en Atlante del Pacífico o súmate como hotel, concierge o agencia. Revisamos cada solicitud antes de publicar la ficha.",
+    en: "List your vessel on Atlante del Pacífico or join as a hotel, concierge or agency. We review every application before publishing a listing.",
+  },
+  meta_how_title: { es: "Cómo funciona", en: "How it works" },
+  meta_how_desc: {
+    es: "Eliges tu experiencia, escoges fecha y pasajeros, dejas tus datos y completas el pago directo con el operador. Atlante nunca cobra.",
+    en: "You pick your experience, choose date and passengers, leave your details and complete payment directly with the operator. Atlante never charges.",
+  },
+  meta_terms_title: { es: "Términos y condiciones", en: "Terms and conditions" },
+  meta_terms_desc: {
+    es: "Rol de Atlante del Pacífico como intermediario: quién presta el servicio, quién cobra y qué condiciones aplican a cada reserva.",
+    en: "Atlante del Pacífico's role as an intermediary: who provides the service, who charges and which conditions apply to each booking.",
+  },
+  meta_privacy_title: { es: "Política de privacidad", en: "Privacy policy" },
+  meta_privacy_desc: {
+    es: "Qué datos pide Atlante del Pacífico, para qué los usa, cómo se transfieren al operador y cómo pedir su corrección o borrado.",
+    en: "What data Atlante del Pacífico asks for, what it is used for, how it is transferred to the operator and how to request its correction or deletion.",
+  },
+  meta_cancel_title: { es: "Cancelaciones y reembolsos", en: "Cancellations and refunds" },
+  meta_cancel_desc: {
+    es: "Las políticas de cancelación y reembolso las fija el operador. Aquí explicamos dónde consultarlas para cada tipo de experiencia.",
+    en: "Cancellation and refund policies are set by the operator. Here we explain where to check them for each kind of experience.",
+  },
+  meta_book_title: { es: "Reservar {name}", en: "Book {name}" },
+  meta_vessel_title: {
+    es: "{name} — chárter privado en Panamá",
+    en: "{name} — private charter in Panama",
+  },
+  meta_quote_title: { es: "Cotizar", en: "Request a quote" },
+  meta_listo_title: {
+    es: "Te llevamos a Pacific Experience",
+    en: "Taking you to Pacific Experience",
+  },
 } as const;
 
 export type DictKey = keyof typeof dict;

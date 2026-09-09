@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import type { Vessel } from "@/content/vessels";

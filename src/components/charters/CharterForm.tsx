@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { OCCASIONS, type Vessel } from "@/content/vessels";
 import { useLocale } from "@/lib/locale-context";
+import { localeHref } from "@/lib/locale-routing";
 import { occasionLabel, routeLabel, t, tf } from "@/lib/i18n";
 import { money } from "@/lib/format";
 import { whatsappUrl } from "@/config/site";
@@ -112,7 +113,9 @@ export default function CharterForm({ vessel }: { vessel: Vessel }) {
       value: tier?.price ?? 0,
     });
 
-    router.push(`/charters/${vessel.slug}/listo${leadId ? `?lead=${leadId}` : ""}`);
+    router.push(
+      localeHref(`/charters/${vessel.slug}/listo${leadId ? `?lead=${leadId}` : ""}`, locale),
+    );
   }
 
   async function submit(event: React.FormEvent) {

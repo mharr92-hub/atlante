@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import VesselDetail from "@/components/charters/VesselDetail";
 import { site } from "@/config/site";
-import { L, type Locale } from "@/lib/i18n";
+import { L, tf } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import { PEX_BRAND } from "@/lib/pex";
 import { getOperator, getVessel, getVessels } from "@/lib/vessels";
 import { cheapestRow, operatorSealVisible } from "@/lib/vessel-pricing";
@@ -20,13 +20,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const vessel = await getVessel(slug);
   if (!vessel) return {};
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return {
-    title: `${vessel.name} — chárter privado en Panamá`,
+    title: tf("meta_vessel_title", locale, { name: vessel.name }),
     ...(vessel.summary ? { description: L(vessel.summary, locale) } : {}),
-    alternates: { canonical: `${site.url}/charters/${vessel.slug}` },
+    alternates: await pageAlternates(`/charters/${vessel.slug}`),
   };
 }
 

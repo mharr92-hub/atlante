@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { L, type Locale } from "@/lib/i18n";
+import { L, t } from "@/lib/i18n";
+import { getLocale, pageAlternates } from "@/lib/locale-server";
 import { buildPexUrl, PEX_BRAND, PEX_DOMAIN_LABEL } from "@/lib/pex";
 import LegalShell from "@/components/site/LegalShell";
 
-export const metadata: Metadata = {
-  title: "Cancelaciones y reembolsos",
-  description:
-    "Las políticas de cancelación y reembolso las fija el operador. Aquí explicamos dónde consultarlas para cada tipo de experiencia.",
-  alternates: { canonical: "/cancelaciones" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t("meta_cancel_title", locale),
+    description: t("meta_cancel_desc", locale),
+    alternates: await pageAlternates("/cancelaciones"),
+  };
+}
 
 const copy = {
   title: { es: "Cancelaciones y reembolsos", en: "Cancellations and refunds" },
@@ -49,8 +51,7 @@ const copy = {
 } as const;
 
 export default async function CancelacionesPage() {
-  const cookieStore = await cookies();
-  const locale: Locale = cookieStore.get("locale")?.value === "en" ? "en" : "es";
+  const locale = await getLocale();
 
   return (
     <LegalShell locale={locale} title={L(copy.title, locale)}>

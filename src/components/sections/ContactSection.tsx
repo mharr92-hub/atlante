@@ -1,6 +1,6 @@
 "use client";
 
-import { site, whatsappUrl } from "@/config/site";
+import { site, whatsappGreeting, whatsappUrl } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
@@ -13,7 +13,7 @@ export default function ContactSection() {
     const data = new FormData(e.currentTarget);
     const get = (k: string) => (data.get(k) as string) || "";
     const lines = [
-      site.whatsapp.defaultMessage,
+      whatsappGreeting(locale),
       get("name") && `${t("form_name", locale)}: ${get("name")}`,
       get("phone") && `${t("form_phone", locale)}: ${get("phone")}`,
       get("email") && `${t("form_email", locale)}: ${get("email")}`,
@@ -34,7 +34,7 @@ export default function ContactSection() {
           <p style={{ color: "rgba(248,243,232,.8)" }}>{t("contact_body", locale)}</p>
           <div className="contact-lines">
             <a
-              href={whatsappUrl()}
+              href={whatsappUrl(whatsappGreeting(locale))}
               target="_blank"
               rel="noreferrer"
               onClick={() => track("whatsapp_click", { context: "contact_section" })}
@@ -63,11 +63,15 @@ export default function ContactSection() {
           </label>
           <label>
             {t("form_group", locale)}
-            <input name="group" placeholder={locale === "es" ? "8 invitados, celebracion" : "8 guests, celebration"} />
+            <input name="group" placeholder={t("contact_group_placeholder", locale)} />
           </label>
           <label>
             {t("form_message", locale)}
-            <textarea name="message" rows={5} placeholder="Taboga, Las Perlas, atardecer..." />
+            <textarea
+              name="message"
+              rows={5}
+              placeholder={t("contact_message_placeholder", locale)}
+            />
           </label>
           <button className="button button-primary" type="submit">
             {t("form_submit", locale)}

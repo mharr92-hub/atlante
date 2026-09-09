@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/site/LocaleLink";
 import { useEffect } from "react";
 import type { Product } from "@/content/catalog";
 import { site } from "@/config/site";
