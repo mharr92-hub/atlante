@@ -45,3 +45,10 @@ next-env.d.ts
 # logs del script de bloques
 /logs/
 
+# artefactos de Playwright y Lighthouse CI (bloque 6.3)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/.lighthouseci/
+

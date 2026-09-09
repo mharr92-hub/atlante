@@ -1,0 +1,107 @@
+name: CI
+
+# Bloque 6.3 — la red que protege lo construido en los bloques 0 a 5.
+#
+# Se dispara en cada push a una rama `feature/*` (donde trabaja la sesión de
+# código) y en cada PR contra `main` (que es lo único que puede llegar a
+# producción). Nada de esto despliega ni toca Vercel, Supabase ni Pacific
+# Experience: sólo lee el repo.
+on:
+  push:
+    branches:
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+# Un push nuevo cancela la corrida anterior de la misma rama.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Lint, tests, build y e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` corre `postinstall` → `prisma generate`, que no necesita base
+      # de datos (`prisma.config.ts` no carga variables de entorno).
+      - name: Instalar
+        run: npm ci
+
+      # `npm run lint` ya incluye `check:pex-links`; se corre además suelto para
+      # que el criterio A3 del PRD tenga su propio paso visible en el log.
+      - name: Lint
+        run: npm run lint
+
+      - name: Enlaces a Pacific Experience (A3)
+        run: npm run check:pex-links
+
+      - name: Tests unitarios
+        run: npm run test
+
+      # SIN `DATABASE_URL` a propósito: la regla 9 dice que todo tiene que
+      # compilar y funcionar sin base de datos. Si algún día el build la
+      # exigiera, aquí iría una ficticia; hoy no hace falta.
+      - name: Build
+        run: npm run build
+
+      - name: Navegador de Playwright
+        run: npx playwright install --with-deps chromium
+
+      # E2E del funnel en modo puente: 3 clics → /listo → PEX con ref=ATLANTE.
+      - name: E2E del funnel (A4 y A5)
+        run: npm run test:e2e
+
+      - name: Guardar el informe de Playwright si algo falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse móvil (no bloqueante)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # No bloquea el merge: el umbral de 85 es un objetivo (criterio A9) y la
+    # medición depende de la máquina y de la red del runner.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # El informe se guarda como artefacto del repo: no se sube a ningún
+      # servicio externo (`target: filesystem` en `lighthouserc.json`).
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.x autorun
+
+      - name: Guardar el informe de Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 7

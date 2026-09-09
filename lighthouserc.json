@@ -1,0 +1,27 @@
+{
+  "$comment": "Bloque 6.3 — Lighthouse CI móvil sobre las tres rutas del criterio A9 del PRD. El preset por defecto de Lighthouse ya es móvil. El informe se guarda en el sistema de archivos y se sube como artefacto de GitHub: no se manda a ningún servicio externo.",
+  "ci": {
+    "collect": {
+      "startServerCommand": "npx next start -p 3200",
+      "startServerReadyPattern": "Ready in",
+      "url": [
+        "http://127.0.0.1:3200/",
+        "http://127.0.0.1:3200/reservar/tour-bahia",
+        "http://127.0.0.1:3200/charters"
+      ],
+      "numberOfRuns": 1
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "categories:accessibility": ["error", { "minScore": 0.85 }],
+        "categories:seo": ["warn", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.9 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}
