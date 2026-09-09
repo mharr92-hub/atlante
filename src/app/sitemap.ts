@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getTicketProducts } from "@/lib/catalog";
 import { getVessels } from "@/lib/vessels";
+import { destinationSlugs } from "@/content/destinations";
 import { site } from "@/config/site";
 
 /**
@@ -16,6 +17,7 @@ const staticPaths: Array<{ path: string; priority: number }> = [
   { path: "/tours", priority: 0.9 },
   { path: "/charters", priority: 0.9 },
   { path: "/charters/comparar", priority: 0.6 },
+  ...destinationSlugs.map((slug) => ({ path: `/destinos/${slug}`, priority: 0.7 })),
   { path: "/aliados", priority: 0.5 },
   { path: "/aliados/registro", priority: 0.4 },
   { path: "/como-funciona", priority: 0.6 },

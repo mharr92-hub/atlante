@@ -21,6 +21,30 @@ export function L(value: Localized, locale: Locale): string {
 /** UI chrome dictionary — keys reused across components. */
 export const dict = {
   nav_reserve: { es: "Reservar", en: "Book now" },
+  nav_main: { es: "Principal", en: "Main" },
+  nav_footer: { es: "Pie de página", en: "Footer" },
+  nav_legal: { es: "Legal", en: "Legal" },
+  nav_language: { es: "Idioma", en: "Language" },
+  hero_media_alt: {
+    es: "Embarcación privada en el Pacífico de Panamá",
+    en: "Private vessel on the Panamanian Pacific",
+  },
+  footer_tagline: {
+    es: "Experiencias privadas en el océano.",
+    en: "Private experiences on the ocean.",
+  },
+  footer_rights: {
+    es: "Todos los derechos reservados.",
+    en: "All rights reserved.",
+  },
+  contact_message_placeholder: {
+    es: "Taboga, Las Perlas, atardecer…",
+    en: "Taboga, Las Perlas, evening…",
+  },
+  contact_group_placeholder: {
+    es: "8 invitados, celebración",
+    en: "8 guests, celebration",
+  },
   hero_eyebrow: {
     es: "Tours y charters privados - Ciudad de Panama",
     en: "Private tours & charters - Panama City",
@@ -66,6 +90,25 @@ export const dict = {
   destinos_title: {
     es: "Rutas ocultas desde el Pacifico panameno.",
     en: "Hidden routes from the Panamanian Pacific.",
+  },
+  destinos_lede: {
+    es: "Tres destinos y todas las formas de llegar a cada uno, con el precio de cada operador.",
+    en: "Three destinations and every way to reach each one, with each operator's price.",
+  },
+  dest_see: { es: "Ver todas las formas de ir", en: "See every way to get there" },
+  dest_tickets_title: { es: "En ticket, por persona", en: "By ticket, per person" },
+  dest_charters_title: {
+    es: "En nave completa, para tu grupo",
+    en: "Whole vessel, for your group",
+  },
+  dest_unavailable_title: { es: "Publicado, sin venta hoy", en: "Listed, not on sale today" },
+  dest_unavailable_note: {
+    es: "Pacific Experience no lo está vendiendo por ahora, así que no mostramos precio ni botón. En cuanto vuelva, aparece aquí.",
+    en: "Pacific Experience is not selling it right now, so we show no price and no button. As soon as it is back, it appears here.",
+  },
+  dest_empty: {
+    es: "Todavía no hay ninguna forma publicada de llegar a este destino.",
+    en: "There is no published way to reach this destination yet.",
   },
   about_eyebrow: { es: "Sobre Atlante", en: "About Atlante" },
   about_title: {

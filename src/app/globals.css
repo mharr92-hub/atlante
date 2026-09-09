@@ -477,6 +477,42 @@ p {
   padding-top: 22px;
 }
 
+.destination-list h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.destination-list h3 a:hover,
+.destination-list h3 a:focus-visible {
+  text-decoration: underline;
+}
+
+/* ---------- Destinos (bloque 6.1) ---------- */
+.destination-copy {
+  max-width: 760px;
+  display: grid;
+  gap: 16px;
+}
+
+.destination-copy p {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.destination-pending {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.destination-pending li {
+  border-top: 1px solid rgba(10, 36, 33, 0.16);
+  padding-top: 12px;
+  font-size: 18px;
+}
+
 .about-panel {
   max-width: 900px;
 }
@@ -561,7 +597,8 @@ textarea {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  /* Cuatro columnas desde el bloque 6: marca, navegación, destinos y legal. */
+  grid-template-columns: 1fr auto auto auto;
   gap: 32px;
   align-items: center;
 }

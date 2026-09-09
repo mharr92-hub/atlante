@@ -1,32 +1,18 @@
 "use client";
 
+import Link from "next/link";
+import { destinations } from "@/content/destinations";
 import { useLocale } from "@/lib/locale-context";
 import { L, t } from "@/lib/i18n";
 
-const destinations = [
-  {
-    h: { es: "Taboga, la isla de las flores", en: "Taboga, the island of flowers" },
-    p: {
-      es: "A 12 millas nauticas de Amador. Anclajes tranquilos, almuerzo y regreso antes de la brisa.",
-      en: "Twelve nautical miles from Amador. Calm anchorages, lunch and return before the breeze.",
-    },
-  },
-  {
-    h: { es: "Las Perlas", en: "Las Perlas" },
-    p: {
-      es: "Contadora para llegar; Saboga y Mogo Mogo para anclar, snorkelear y desaparecer.",
-      en: "Contadora to arrive; Saboga and Mogo Mogo to anchor, snorkel and disappear.",
-    },
-  },
-  {
-    h: { es: "Bahia de Panama al atardecer", en: "Bay of Panama at dusk" },
-    p: {
-      es: "Tres horas costeando el skyline y el Puente de las Americas, sin agenda y con buena luz.",
-      en: "Three hours cruising the skyline and the Bridge of the Americas, no agenda and great light.",
-    },
-  },
-];
-
+/**
+ * Home → destinos (bloque 6.1).
+ *
+ * Antes esta sección tenía tres textos con cifras que nadie podía respaldar
+ * (millas náuticas y horas de navegación). Ahora lee `content/destinations.ts`,
+ * que no tiene ningún número, y cada destino enlaza a su página con todas las
+ * formas de ir.
+ */
 export default function Destinations() {
   const { locale } = useLocale();
   return (
@@ -35,12 +21,18 @@ export default function Destinations() {
         <div>
           <p className="eyebrow">{t("destinos_eyebrow", locale)}</p>
           <h2>{t("destinos_title", locale)}</h2>
+          <p>{t("destinos_lede", locale)}</p>
         </div>
         <div className="destination-list">
           {destinations.map((d) => (
-            <article key={d.h.en}>
-              <h3>{L(d.h, locale)}</h3>
-              <p>{L(d.p, locale)}</p>
+            <article key={d.slug}>
+              <h3>
+                <Link href={`/destinos/${d.slug}`}>{L(d.name, locale)}</Link>
+              </h3>
+              <p>{L(d.summary, locale)}</p>
+              <Link className="card-link" href={`/destinos/${d.slug}`}>
+                {t("dest_see", locale)}
+              </Link>
             </article>
           ))}
         </div>
