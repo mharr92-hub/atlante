@@ -1,10 +1,6 @@
-"use client";
-
 import { whatsappUrl } from "@/config/site";
-import { useLocale } from "@/lib/locale-context";
 
 export default function WhatsAppFloat() {
-  const { locale } = useLocale();
   return (
     <a
       className="wa-float"

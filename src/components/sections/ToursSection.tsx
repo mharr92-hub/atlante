@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { toursOnly } from "@/content/tours";
 import { useLocale } from "@/lib/locale-context";
@@ -9,7 +8,7 @@ import TourCard from "@/components/tour/TourCard";
 
 const FILTERS: Array<{ key: string; label: DictKey }> = [
   { key: "all", label: "filter_all" },
-  { key: "sunset", label: "filter_sunset" },
+  { key: "evening", label: "filter_evening" },
   { key: "islands", label: "filter_islands" },
   { key: "celebration", label: "filter_celebration" },
   { key: "custom", label: "filter_custom" },
@@ -39,20 +38,13 @@ export default function ToursSection() {
               {t(f.label, locale)}
             </button>
           ))}
-          <Link
-            href="/compare"
-            className="filter"
-            style={{ marginLeft: "auto", borderColor: "var(--gold)", color: "var(--gold)" }}
-          >
-            {t("compare", locale)}
-          </Link>
         </div>
 
         <div className="charter-grid">
           {toursOnly
             .filter((tour) => active === "all" || tour.categories.includes(active as never))
             .map((tour) => (
-              <TourCard key={tour.slug} tour={tour} urgency />
+              <TourCard key={tour.slug} tour={tour} />
             ))}
         </div>
       </div>

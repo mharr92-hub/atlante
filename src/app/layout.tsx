@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "yate privado Panama",
     "Taboga",
     "Las Perlas",
-    "sunset cruise Panama City",
+    "evening cruise Panama City",
     "boat rental Panama",
   ],
   authors: [{ name: site.name }],

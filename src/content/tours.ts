@@ -43,7 +43,7 @@ export interface Tour {
   slug: string;
   kind: "tour" | "charter";
   /** Filter categories used by the homepage grid. */
-  categories: Array<"sunset" | "islands" | "celebration" | "custom">;
+  categories: Array<"evening" | "islands" | "celebration" | "custom">;
   name: Localized;
   tagline: Localized;
   summary: Localized;
@@ -70,15 +70,15 @@ export interface Tour {
   gallery: string[];
   heroImage: string;
   /** CSS background-position class for the homepage card crop. */
-  cardCrop: "card-sunset" | "card-taboga" | "card-perlas";
+  cardCrop: "card-evening" | "card-taboga" | "card-perlas";
 }
 
 export const tours: Tour[] = [
   {
     slug: "travesia-al-atardecer",
     kind: "tour",
-    categories: ["sunset", "celebration"],
-    name: { es: "Travesia al atardecer", en: "Sunset Voyage" },
+    categories: ["evening", "celebration"],
+    name: { es: "Travesia al atardecer", en: "Evening Voyage" },
     tagline: {
       es: "Skyline, cocteles y la mejor luz del dia.",
       en: "Skyline, cocktails and the best light of the day.",
@@ -131,10 +131,10 @@ export const tours: Tour[] = [
       },
       {
         time: { es: "18:30", en: "6:30 PM" },
-        title: { es: "Atardecer y regreso", en: "Sunset and return" },
+        title: { es: "Atardecer y regreso", en: "Dusk and return" },
         detail: {
           es: "El sol cae tras el canal y volvemos con la ciudad iluminada.",
-          en: "The sun sets behind the canal and we return to the lit-up city.",
+          en: "The sun drops behind the canal and we return to the lit-up city.",
         },
         coord: { lat: 8.9096, lng: -79.5253 },
       },
@@ -157,7 +157,7 @@ export const tours: Tour[] = [
     ],
     gallery: ["/og-atlante.jpg", "/og-atlante.jpg", "/og-atlante.jpg"],
     heroImage: "/og-atlante.jpg",
-    cardCrop: "card-sunset",
+    cardCrop: "card-evening",
   },
   {
     slug: "escape-a-taboga",
@@ -289,7 +289,7 @@ export const tours: Tour[] = [
       {
         time: { es: "16:00", en: "4:00 PM" },
         title: { es: "Regreso", en: "Return" },
-        detail: { es: "Regreso a Amador al atardecer.", en: "Return to Amador at sunset." },
+        detail: { es: "Regreso a Amador al atardecer.", en: "Return to Amador at dusk." },
         coord: { lat: 8.9096, lng: -79.5253 },
       },
     ],
@@ -309,8 +309,8 @@ export const tours: Tour[] = [
   {
     slug: "charter-atardecer-privado",
     kind: "charter",
-    categories: ["sunset", "celebration", "custom"],
-    name: { es: "Charter atardecer privado", en: "Private Sunset Charter" },
+    categories: ["evening", "celebration", "custom"],
+    name: { es: "Charter atardecer privado", en: "Private Evening Charter" },
     tagline: {
       es: "El yate completo, solo para tu grupo.",
       en: "The whole yacht, just for your group.",
@@ -365,7 +365,7 @@ export const tours: Tour[] = [
     ],
     gallery: ["/og-atlante.jpg", "/og-atlante.jpg", "/og-atlante.jpg"],
     heroImage: "/og-atlante.jpg",
-    cardCrop: "card-sunset",
+    cardCrop: "card-evening",
   },
   {
     slug: "yate-completo-taboga",

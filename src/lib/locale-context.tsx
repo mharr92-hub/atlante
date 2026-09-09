@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
+import { createContext, useCallback, useContext, useState } from "react";
+import type { Locale } from "@/lib/i18n";
 
 type LocaleContextValue = {
   locale: Locale;
@@ -29,31 +23,19 @@ function persist(locale: Locale) {
   }
 }
 
+/**
+ * The locale always arrives from the server, resolved from the `locale` cookie
+ * in the root layout, so client and server render the same language on the
+ * first paint. `setLocale` persists the choice back to that cookie.
+ */
 export function LocaleProvider({
   initial,
   children,
 }: {
-  initial?: Locale;
+  initial: Locale;
   children: React.ReactNode;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(initial ?? DEFAULT_LOCALE);
-
-  // On mount, reconcile with a stored/browser preference when no SSR value was given.
-  useEffect(() => {
-    if (initial) return;
-    let next: Locale | null = null;
-    try {
-      const stored = localStorage.getItem(COOKIE) as Locale | null;
-      if (stored === "es" || stored === "en") next = stored;
-    } catch {
-      /* ignore */
-    }
-    if (!next && typeof navigator !== "undefined") {
-      next = navigator.language?.toLowerCase().startsWith("en") ? "en" : "es";
-    }
-    if (next && next !== locale) setLocaleState(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [locale, setLocaleState] = useState<Locale>(initial);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);

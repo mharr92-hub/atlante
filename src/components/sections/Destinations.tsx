@@ -19,7 +19,7 @@ const destinations = [
     },
   },
   {
-    h: { es: "Bahia de Panama al atardecer", en: "Bay of Panama at sunset" },
+    h: { es: "Bahia de Panama al atardecer", en: "Bay of Panama at dusk" },
     p: {
       es: "Tres horas costeando el skyline y el Puente de las Americas, sin agenda y con buena luz.",
       en: "Three hours cruising the skyline and the Bridge of the Americas, no agenda and great light.",

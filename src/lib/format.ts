@@ -1,43 +1,31 @@
 /**
- * Money, currency and pricing helpers.
+ * Money and pricing helpers.
  *
- * USD is the base currency (Panama uses the US dollar). Additional currencies
- * are converted with static reference rates; swap `RATES` for a live FX feed
- * (e.g. a cached call to exchangerate.host) when you want real-time conversion.
+ * USD only: Panama uses the US dollar and the payment always happens on the
+ * operator's checkout (Pacific Experience charges in USD). R0 removed the
+ * USD/EUR/COP/MXN selector and its fixed reference rates — converting on the
+ * client showed a price the customer would never actually be charged.
  */
 import type { Tour } from "@/content/tours";
 
-export type CurrencyCode = "USD" | "EUR" | "COP" | "MXN";
-
-export const CURRENCIES: Record<
-  CurrencyCode,
-  { label: string; locale: string; rate: number }
-> = {
-  USD: { label: "USD $", locale: "en-US", rate: 1 },
-  EUR: { label: "EUR €", locale: "de-DE", rate: 0.92 },
-  COP: { label: "COP $", locale: "es-CO", rate: 4050 },
-  MXN: { label: "MXN $", locale: "es-MX", rate: 17.1 },
-};
-
-/** Format a USD amount in the target currency. */
-export function money(
-  usd: number,
-  currency: CurrencyCode = "USD",
-  opts: { maximumFractionDigits?: number } = {},
-): string {
-  const { rate, locale } = CURRENCIES[currency];
-  return new Intl.NumberFormat(locale, {
+/**
+ * Format a USD amount. Whole dollars render without decimals; amounts with
+ * cents keep the two decimals.
+ */
+export function money(usd: number): string {
+  const hasCents = !Number.isInteger(usd);
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency,
-    maximumFractionDigits: opts.maximumFractionDigits ?? 0,
-  }).format(usd * rate);
+    currency: "USD",
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: hasCents ? 2 : 0,
+  }).format(usd);
 }
 
 /**
  * Compute the price for a tour given a guest count.
  * - perPerson: priceFrom * guests
  * - perBoat: priceFrom + max(0, guests - baseCapacity) * extraGuestPrice
- * Mirrors the prod app's charter pricing (base + extra-pax surcharge).
  */
 export function priceForGuests(tour: Tour, guests: number): number {
   const p = tour.pricing;

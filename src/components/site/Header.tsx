@@ -4,13 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { navItems, site, whatsappUrl } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
-import { useCurrency } from "@/lib/currency-context";
 import { t } from "@/lib/i18n";
-import { CURRENCIES, type CurrencyCode } from "@/lib/format";
 
 export default function Header() {
   const { locale, setLocale } = useLocale();
-  const { currency, setCurrency } = useCurrency();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -39,19 +36,6 @@ export default function Header() {
       </nav>
 
       <div className="header-actions">
-        <select
-          className="currency-select"
-          aria-label="Currency"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-        >
-          {(Object.keys(CURRENCIES) as CurrencyCode[]).map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-
         <div className="lang-toggle" role="group" aria-label="Language">
           <button
             type="button"

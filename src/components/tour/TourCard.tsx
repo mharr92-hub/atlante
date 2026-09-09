@@ -3,25 +3,23 @@
 import Link from "next/link";
 import type { Tour } from "@/content/tours";
 import { useLocale } from "@/lib/locale-context";
-import { useCurrency } from "@/lib/currency-context";
 import { L, t } from "@/lib/i18n";
-import { money } from "@/lib/format";
 import { whatsappUrl } from "@/config/site";
 import Badges from "@/components/tour/Badges";
 
+/**
+ * Catalog card. R0 hides the price: the current catalog is placeholder data and
+ * a price is only shown once it comes from the operator (block 2).
+ */
 export default function TourCard({
   tour,
   light = false,
-  urgency = false,
 }: {
   tour: Tour;
   light?: boolean;
-  urgency?: boolean;
 }) {
   const { locale } = useLocale();
-  const { currency } = useCurrency();
   const isCharter = tour.kind === "charter";
-  const priceLabel = tour.pricing.model === "perPerson" ? t("per_person", locale) : t("per_boat", locale);
   const waMsg =
     locale === "es"
       ? `Hola Atlante, quiero informacion sobre ${L(tour.name, "es")}.`
@@ -33,11 +31,8 @@ export default function TourCard({
       data-category={tour.categories.join(" ")}
     >
       <Link href={`/tours/${tour.slug}`} className={`card-image ${tour.cardCrop}`} aria-label={L(tour.name, locale)} />
-      <p className="fact">
-        {L(tour.duration, locale)} · {t("from", locale)} {money(tour.pricing.priceFrom, currency)} {priceLabel}
-      </p>
+      <p className="fact">{L(tour.duration, locale)}</p>
       <Badges badges={tour.badges} />
-      {urgency ? <span className="urgency">{t("spots_left", locale)}</span> : null}
       <h3 style={{ marginTop: 10 }}>{L(tour.name, locale)}</h3>
       <p className="card-body-text">{L(tour.summary, locale)}</p>
       <div className="card-actions">
