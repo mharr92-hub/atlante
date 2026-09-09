@@ -261,6 +261,8 @@ model Lead {
 
   serviceDate DateTime? @db.Date
   timeSlot    String?
+  /// Id de la salida de PEX elegida en modo integrado (`ProductSlot.pexSlotId`).
+  pexSlotId   String?
   /// Cantidad por categoría de precio: { "adulto-nacional": 2, ... }
   pax         Json?
   paxTotal    Int?
@@ -325,6 +327,118 @@ model PexEvent {
 
   @@unique([pexBookingId, eventType])
   @@index([leadId])
+}
+
+// ============================================================================
+// R1c — catálogo en base de datos y espejo del feed de PEX
+//
+// `Product` es el espejo del tipo `Product` de `src/content/catalog.ts`: los
+// textos bilingües y las listas viajan como JSON `{ es, en }` / `Localized[]`,
+// tal como los consume el sitio. `src/lib/catalog.ts` lee de aquí cuando hay
+// filas y cae al catálogo en código cuando no (regla 9).
+//
+// `ProductSlot` es la copia del feed X4 de PEX (`/slots`). Mientras esté vacío
+// o con `syncedAt` de más de 24 h, el funnel sigue en modo puente.
+// ============================================================================
+
+/// Producto del catálogo (ticketería y naves de PEX).
+model Product {
+  id     String @id @default(cuid())
+  slug   String @unique
+  kind   String
+  source String @default("pex")
+
+  /// Identificador del trip en PEX; habilita el deep link al checkout.
+  pexTripId String?
+  pexPath   String
+  /// Slug de nave para `charter_checkout` (aura, pacific-ferry-1, …).
+  pexVessel String?
+
+  /// Textos bilingües: { "es": "…", "en": "…" }.
+  name        Json
+  summary     Json
+  description Json
+
+  priceFrom          Decimal  @db.Decimal(10, 2)
+  priceUnit          String
+  /// [{ key, label: { es, en }, price, note? }]
+  priceTable         Json?
+  pricePerPersonFrom Decimal? @db.Decimal(10, 2)
+
+  durationMin   Int?
+  durationLabel Json
+
+  /// { weekdays: [5,6,0], times: [{ start, end }], validFrom?, note? }
+  schedule    Json?
+  capacityMin Int?
+  capacityMax Int?
+
+  /// Listas de textos bilingües: [{ es, en }, …]
+  includes    Json?
+  notIncluded Json?
+  policies    Json?
+  /// ["/foto-1.jpg", …]
+  images      Json?
+  /// ["family", "evening", …]
+  badges      Json?
+
+  available     Boolean   @default(true)
+  /// Día en que el dato se contrastó contra PEX (aviso en admin a los 14 días).
+  verifiedAt    DateTime? @db.Date
+  sourceUrl     String?
+  /// Comisión de Atlante para este producto; sin valor manda ATLANTE_COMMISSION_PCT.
+  commissionPct Decimal?  @db.Decimal(5, 2)
+  order         Int       @default(0)
+  /// Última vez que el cron copió este producto del feed de PEX.
+  syncedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addons ProductAddon[]
+  slots  ProductSlot[]
+
+  @@index([available, order])
+}
+
+/// Adicional de un producto (BBQ, open bar, tour por las islas…).
+model ProductAddon {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  slug        String
+  name        Json
+  description Json?
+  price       Decimal @db.Decimal(10, 2)
+  /// per_person | per_booking | pending (PEX no publica la unidad).
+  unit        String  @default("per_person")
+  durationMin Int?
+  active      Boolean @default(true)
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, slug])
+}
+
+/// Salida real copiada del feed de PEX. Su existencia activa el modo integrado.
+model ProductSlot {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  pexSlotId         String   @unique
+  date              DateTime @db.Date
+  startTime         String
+  endTime           String?
+  capacityRemaining Int
+  price             Decimal? @db.Decimal(10, 2)
+  syncedAt          DateTime @default(now())
+
+  @@index([productId, date])
+  @@index([date])
 }
 
 /// Alta self-service de operadores de charter (marketplace, bloque 4/R2).

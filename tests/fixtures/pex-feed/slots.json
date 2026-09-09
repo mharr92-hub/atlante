@@ -1,0 +1,63 @@
+[
+  {
+    "id": "slot-2026-09-18-1730",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-18",
+    "start": "17:30",
+    "end": "19:00",
+    "capacity_remaining": 18,
+    "price": 25
+  },
+  {
+    "id": "slot-2026-09-18-2000",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-18",
+    "start": "20:00",
+    "end": "21:30",
+    "capacity_remaining": 2,
+    "price": 25
+  },
+  {
+    "id": "slot-2026-09-19-1730",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-19",
+    "start": "17:30",
+    "end": "19:00",
+    "capacity_remaining": 0,
+    "price": 25
+  },
+  {
+    "id": "slot-2026-09-20-1730",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-20",
+    "start": "17:30",
+    "end": "19:00",
+    "capacity_remaining": 40,
+    "price": 25
+  },
+  {
+    "id": "slot-2026-09-25-1730",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-25",
+    "start": "17:30",
+    "end": "19:00",
+    "capacity_remaining": 12,
+    "price": 25
+  },
+  {
+    "id": "slot-fecha-invalida",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "18/09/2026",
+    "start": "17:30",
+    "capacity_remaining": 5,
+    "price": 25
+  },
+  {
+    "id": "slot-sin-cupo-numerico",
+    "trip_id": "c0d1a003-0000-4000-8000-000000000084",
+    "date": "2026-09-26",
+    "start": "17:30",
+    "capacity_remaining": "muchos",
+    "price": 25
+  }
+]

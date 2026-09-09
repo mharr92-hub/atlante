@@ -1,0 +1,77 @@
+[
+  {
+    "id": "c0d1a003-0000-4000-8000-000000000084",
+    "slug": "tour-bahia",
+    "kind": "tour",
+    "name": "Tour por la Bahía",
+    "price_from": 25,
+    "price_table": [{ "label": "Por persona", "price": 25 }],
+    "duration_min": 90,
+    "capacity_min": 1,
+    "capacity_max": 60,
+    "policies": [
+      "Pago en línea del 100 % al reservar.",
+      "Reembolso sólo hasta 24 horas antes de la salida."
+    ],
+    "images": ["/tours/bahia-1.jpg", "/tours/bahia-2.jpg"],
+    "path": "/ferry/bahia",
+    "available": true
+  },
+  {
+    "id": "c0d1a003-0000-4000-8000-000000000085",
+    "slug": "party-bahia",
+    "kind": "party",
+    "name": "Party en la Bahía",
+    "price_from": 35,
+    "price_table": [{ "label": "Por persona", "price": 35 }],
+    "duration_min": 150,
+    "capacity_min": 30,
+    "capacity_max": 80,
+    "policies": ["Grupos de 30 a 80 personas."],
+    "images": ["/tours/party-1.jpg"],
+    "path": "/tours/c0d1a003-0000-4000-8000-000000000085",
+    "available": true
+  },
+  {
+    "id": "c0d1a003-0000-4000-8000-000000000090",
+    "slug": "ferry-taboga",
+    "kind": "ferry",
+    "name": "Ferry a Isla Taboga",
+    "price_from": 10,
+    "price_table": [
+      { "label": "Adulto nacional", "price": 10 },
+      { "label": "Niño y jubilado", "price": 8 }
+    ],
+    "duration_min": 30,
+    "capacity_min": null,
+    "capacity_max": null,
+    "policies": ["El boleto es válido 180 días."],
+    "images": [],
+    "path": "/ferry/taboga",
+    "available": false
+  },
+  {
+    "id": "",
+    "slug": "sin-id",
+    "kind": "tour",
+    "name": "Entrada rota que el cliente debe descartar",
+    "price_from": 15,
+    "price_table": [],
+    "policies": [],
+    "images": [],
+    "path": "/tours/rota",
+    "available": true
+  },
+  {
+    "id": "c0d1a003-0000-4000-8000-0000000000ff",
+    "slug": "kind-desconocido",
+    "kind": "helicoptero",
+    "name": "Tipo fuera del contrato",
+    "price_from": 500,
+    "price_table": [],
+    "policies": [],
+    "images": [],
+    "path": "/otro",
+    "available": true
+  }
+]
