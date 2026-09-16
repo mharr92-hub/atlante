@@ -1478,8 +1478,15 @@ textarea {
     padding: 12px 0 8px;
   }
 
+  .site-header.is-open {
+    background: rgba(10, 36, 33, 0.98);
+  }
+
   .site-header.is-open .nav {
     display: flex;
+    width: 100%;
+    flex-basis: 100%;
+    border-top: 1px solid rgba(248, 243, 232, 0.18);
   }
 
   .spec-grid {
