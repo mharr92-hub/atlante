@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { navItems, site, whatsappUrl } from "@/config/site";
+import { usePathname } from "next/navigation";
+import { navItems, site } from "@/config/site";
 import { useLocale } from "@/lib/locale-context";
 import { useCurrency } from "@/lib/currency-context";
 import { t } from "@/lib/i18n";
@@ -11,7 +12,10 @@ import { CURRENCIES, type CurrencyCode } from "@/lib/format";
 export default function Header() {
   const { locale, setLocale } = useLocale();
   const { currency, setCurrency } = useCurrency();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const solid = scrolled || pathname !== "/";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -20,9 +24,20 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 900) setMenuOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   return (
-    <header className={`site-header${scrolled ? " is-scrolled" : ""}`} data-header>
-      <Link className="brand" href="/" aria-label={site.name}>
+    <header
+      className={`site-header${solid ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}`}
+      data-header
+    >
+      <Link className="brand" href="/" aria-label={site.name} onClick={() => setMenuOpen(false)}>
         <span className="brand-mark">A</span>
         <span>
           <strong>{site.shortName}</strong>
@@ -30,9 +45,20 @@ export default function Header() {
         </span>
       </Link>
 
-      <nav className="nav" aria-label="Principal">
+      <button
+        type="button"
+        className="nav-toggle"
+        aria-expanded={menuOpen}
+        aria-controls="site-nav"
+        aria-label={menuOpen ? (locale === "es" ? "Cerrar menú" : "Close menu") : (locale === "es" ? "Abrir menú" : "Open menu")}
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span />
+      </button>
+
+      <nav id="site-nav" className="nav" aria-label="Principal">
         {navItems.map((item) => (
-          <Link key={item.href} href={item.href}>
+          <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
             {locale === "es" ? item.labelEs : item.labelEn}
           </Link>
         ))}
@@ -69,14 +95,9 @@ export default function Header() {
           </button>
         </div>
 
-        <a
-          className="nav-cta"
-          href={whatsappUrl()}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <Link className="nav-cta" href="/charters" onClick={() => setMenuOpen(false)}>
           {t("nav_reserve", locale)}
-        </a>
+        </Link>
       </div>
     </header>
   );

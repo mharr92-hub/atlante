@@ -1,16 +1,11 @@
 // Atlante del Pacifico — data model (Phase 2 commerce foundation).
 //
-// Mirrors the proven prod booking model (booking lifecycle, capacity,
-// payment idempotency, QR boarding codes, commission attribution) but is an
-// independent schema. Nothing here is imported by the Phase 1 marketing site
-// yet — it is wired up when the booking endpoints are built.
-//
-// Payment: NO online gateway (no Stripe). Bookings are coordinated over
-// WhatsApp and marked paid manually (cash / bank transfer). A gateway can be
-// added later by extending PaymentMethod + a provider ref, without reshaping.
+// Independent schema for Atlante. Charter MVP uses CharterRequest +
+// PagueloFácil Enlace de Pago (30% deposit = request, not a locked reservation).
 //
 // Provider: Postgres (Neon or Supabase work well on Vercel).
-// After setting DATABASE_URL:  npx prisma migrate dev --name init
+// After setting DATABASE_URL:  npx prisma db push
+// or npx prisma migrate dev --name charter-requests
 
 generator client {
   provider = "prisma-client-js"
@@ -41,6 +36,7 @@ enum BookingFlow {
   whatsapp_request
   manual_payment
   charter_request
+  paguelofacil_checkout
 }
 
 enum PaymentMethod {
@@ -48,6 +44,13 @@ enum PaymentMethod {
   transfer
   manual
   refund
+  paguelofacil
+}
+
+enum CharterConfirmation {
+  awaiting
+  confirmed
+  declined
 }
 
 enum SlotStatus {
@@ -163,6 +166,35 @@ model Payment {
   notes        String?
   collectedBy  String?
   createdAt    DateTime      @default(now())
+}
+
+/// Charter deposit request (Route A). Abono 30% via PagueloFácil; confirmation
+/// is a 24h operator check — the deposit is a request, not a locked reservation.
+model CharterRequest {
+  id                      String              @id @default(uuid())
+  slug                    String
+  durationId              String
+  hours                   Int
+  bookingDate             DateTime            @db.Date
+  guestCount              Int
+  customerName            String
+  customerWhatsapp        String
+  sampleTotalUsd          Decimal?            @db.Decimal(10, 2)
+  depositAmount           Decimal             @db.Decimal(10, 2)
+  depositPercent          Int                 @default(30)
+  status                  BookingStatus       @default(pending)
+  paymentStatus           PaymentStatus       @default(unpaid)
+  charterConfirmation     CharterConfirmation @default(awaiting)
+  confirmationToken       String              @unique
+  paguelofacilLinkCode    String?
+  paguelofacilOperationId String?
+  paymentRef              String?
+  notes                   String?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([slug, bookingDate])
+  @@index([paymentStatus, status])
 }
 
 /// Email capture / newsletter (feeds discount-code + campaign sends).

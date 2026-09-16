@@ -1,9 +1,10 @@
 "use client";
 
-import { chartersOnly } from "@/content/tours";
+import Link from "next/link";
+import { liveCharters } from "@/data/charters";
 import { useLocale } from "@/lib/locale-context";
 import { t } from "@/lib/i18n";
-import TourCard from "@/components/tour/TourCard";
+import CharterCard from "@/components/charter/CharterCard";
 
 export default function ChartersSection() {
   const { locale } = useLocale();
@@ -16,10 +17,15 @@ export default function ChartersSection() {
           <p>{t("charters_lede", locale)}</p>
         </div>
         <div className="charter-grid">
-          {chartersOnly.map((tour) => (
-            <TourCard key={tour.slug} tour={tour} light />
+          {liveCharters.map((c) => (
+            <CharterCard key={c.slug} charter={c} />
           ))}
         </div>
+        <p style={{ marginTop: 28 }}>
+          <Link className="card-link" href="/charters">
+            {t("charters_view_all", locale)} →
+          </Link>
+        </p>
       </div>
     </section>
   );
