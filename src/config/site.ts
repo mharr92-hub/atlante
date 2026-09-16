@@ -7,8 +7,8 @@ export const site = {
   name: "Atlante del Pacifico",
   shortName: "Atlante",
   tagline: "del Pacifico",
-  domain: "atlantedelpacifico.com",
-  url: "https://atlantedelpacifico.com",
+  domain: "atlantedelpacifico.lat",
+  url: "https://www.atlantedelpacifico.lat",
   description:
     "Atlante del Pacifico conecta viajeros con tours curados y charters privados de yate desde Ciudad de Panama, Taboga y Las Perlas.",
   email: "concierge@atlantedelpacifico.com",
@@ -40,9 +40,8 @@ export const site = {
 export type NavItem = { href: string; labelEs: string; labelEn: string };
 
 export const navItems: NavItem[] = [
-  { href: "/#travesias", labelEs: "Tours", labelEn: "Tours" },
+  { href: "/charters", labelEs: "Charters", labelEn: "Charters" },
   { href: "/#destinos", labelEs: "Destinos", labelEn: "Destinations" },
-  { href: "/#charters", labelEs: "Charters", labelEn: "Charters" },
   { href: "/#nosotros", labelEs: "Nosotros", labelEn: "About" },
   { href: "/#contacto", labelEs: "Contacto", labelEn: "Contact" },
 ];

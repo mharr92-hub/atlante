@@ -20,21 +20,25 @@ export function L(value: Localized, locale: Locale): string {
 
 /** UI chrome dictionary — keys reused across components. */
 export const dict = {
-  nav_reserve: { es: "Reservar", en: "Book now" },
+  nav_reserve: { es: "Ver charters", en: "View charters" },
   hero_eyebrow: {
-    es: "Tours y charters privados - Ciudad de Panama",
-    en: "Private tours & charters - Panama City",
+    es: "Charters privados - Ciudad de Panama",
+    en: "Private charters - Panama City",
   },
   hero_title: {
-    es: "El Pacifico panameno, bien conectado.",
-    en: "The Panamanian Pacific, well connected.",
+    es: "El Pacifico panameno, a tu ritmo.",
+    en: "The Panamanian Pacific, at your pace.",
   },
   hero_lede: {
-    es: "Te ayudamos a elegir tours, destinos y charters completos de yate con operadores aliados. Tu grupo recibe una recomendacion clara antes de pagar o confirmar.",
-    en: "We help you choose tours, destinations and whole-yacht charters with partner operators. Your group gets a clear recommendation before paying or confirming.",
+    es: "Alquila el barco completo. Solicitas fecha y horas, pagas el 30% de abono y te confirmamos por WhatsApp en un máximo de 24 horas.",
+    en: "Charter the whole boat. Request a date and hours, pay a 30% deposit, and we confirm on WhatsApp within 24 hours.",
   },
-  hero_cta_tours: { es: "Ver tours", en: "View tours" },
+  hero_cta_tours: { es: "Ver charters", en: "View charters" },
   hero_cta_whatsapp: { es: "Hablar por WhatsApp", en: "Chat on WhatsApp" },
+  hero_product_charters: { es: "Charters", en: "Charters" },
+  hero_product_ferry: { es: "Ferry", en: "Ferry" },
+  hero_product_tours: { es: "Tours", en: "Tours" },
+  coming_soon: { es: "Próximamente", en: "Coming soon" },
   trust_reviews: { es: "resenas", en: "reviews" },
   trust_experiences: { es: "experiencias", en: "experiences" },
   trust_response: { es: "respuesta promedio", en: "avg response" },
@@ -56,9 +60,10 @@ export const dict = {
   charters_eyebrow: { es: "Charters privados", en: "Private charters" },
   charters_title: { es: "Renta total de yate.", en: "Whole-yacht rental." },
   charters_lede: {
-    es: "Para grupos que quieren la embarcacion completa: ruta privada, capitan, horario flexible y una propuesta armada alrededor del tipo de dia que buscas.",
-    en: "For groups who want the whole vessel: private route, captain, flexible schedule and a proposal built around the day you want.",
+    es: "Pacific Ferry y Sirena del Mar están listos para solicitar. El resto de la flota se publica cuando tengamos specs confirmados — sin precios inventados.",
+    en: "Pacific Ferry and Sirena del Mar are ready to request. The rest of the fleet publishes when we have confirmed specs — no invented prices.",
   },
+  charters_view_all: { es: "Ver toda la flota", en: "See the full fleet" },
   destinos_eyebrow: { es: "Destinos", en: "Destinations" },
   destinos_title: {
     es: "Rutas ocultas desde el Pacifico panameno.",
@@ -70,8 +75,8 @@ export const dict = {
     en: "Maritime concierge, with commercial judgment.",
   },
   about_body: {
-    es: "Atlante del Pacifico fue creado para ayudar a viajeros y grupos a escoger mejor antes de reservar. Trabajamos como puente comercial: entendemos el plan, recomendamos rutas y conectamos con tours o charters que encajan con el presupuesto, la fecha y el nivel de privacidad esperado.",
-    en: "Atlante del Pacifico was created to help travelers and groups choose better before booking. We work as a commercial bridge: we understand the plan, recommend routes and connect you with tours or charters that fit the budget, date and privacy level you expect.",
+    es: "Atlante del Pacifico ayuda a grupos a reservar el barco correcto en el Pacifico panameno. Hoy el camino vivo es charter privado: solicitud corta, abono del 30% y confirmacion por WhatsApp en 24 horas.",
+    en: "Atlante del Pacifico helps groups book the right boat on the Panamanian Pacific. The live path today is private charter: a short request, 30% deposit and WhatsApp confirmation within 24 hours.",
   },
   faq_eyebrow: { es: "Preguntas frecuentes", en: "Frequently asked" },
   faq_title: { es: "Practicas antes de zarpar.", en: "Practical, before you set sail." },

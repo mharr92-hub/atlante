@@ -15,8 +15,23 @@ export default function Hero() {
         <p className="eyebrow">{t("hero_eyebrow", locale)}</p>
         <h1>{t("hero_title", locale)}</h1>
         <p className="lede">{t("hero_lede", locale)}</p>
+
+        <div className="hero-products" role="tablist" aria-label="Productos">
+          <Link className="hero-product is-active" href="/charters">
+            {t("hero_product_charters", locale)}
+          </Link>
+          <span className="hero-product is-soon">
+            {t("hero_product_ferry", locale)}
+            <small>{t("coming_soon", locale)}</small>
+          </span>
+          <span className="hero-product is-soon">
+            {t("hero_product_tours", locale)}
+            <small>{t("coming_soon", locale)}</small>
+          </span>
+        </div>
+
         <div className="hero-actions">
-          <Link className="button button-primary" href="/#travesias">
+          <Link className="button button-primary" href="/charters">
             {t("hero_cta_tours", locale)}
           </Link>
           <a className="button button-ghost" href={whatsappUrl()} target="_blank" rel="noreferrer">

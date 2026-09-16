@@ -7,29 +7,29 @@ const faqs = [
   {
     q: { es: "Como reservo un charter?", en: "How do I book a charter?" },
     a: {
-      es: "Escribenos por WhatsApp o llena el formulario. Te pedimos fecha, cantidad de personas y ruta deseada para cotizar.",
-      en: "Message us on WhatsApp or fill the form. We'll ask for the date, number of people and desired route to quote.",
+      es: "Elige la nave, llena nombre, WhatsApp, fecha, horas y personas, y paga el 30% de abono. El abono confirma la solicitud, no la reserva: verificamos disponibilidad en un máximo de 24 horas y te escribimos por WhatsApp.",
+      en: "Pick the boat, fill name, WhatsApp, date, hours and guests, and pay a 30% deposit. The deposit confirms the request, not the reservation: we check availability within 24 hours and message you on WhatsApp.",
     },
   },
   {
-    q: { es: "Los tours y los charters son lo mismo?", en: "Are tours and charters the same?" },
+    q: { es: "Que pasa si la fecha no esta disponible?", en: "What if the date is not available?" },
     a: {
-      es: "No. Un tour suele tener una experiencia y condiciones ya definidas. Un charter es la renta total de la embarcacion para tu grupo.",
-      en: "No. A tour usually has a set experience and conditions. A charter is the whole-vessel rental for your group.",
+      es: "Te ofrecemos una fecha o nave alternativa. Si ninguna te sirve, te devolvemos el 100% del abono.",
+      en: "We offer an alternative date or boat. If none work for you, we refund 100% of the deposit.",
     },
   },
   {
-    q: { es: "Puedo personalizar el itinerario?", en: "Can I customize the itinerary?" },
+    q: { es: "Hay calendario en vivo?", en: "Is there a live calendar?" },
     a: {
-      es: "Si es charter, normalmente si. En tours depende de las reglas del operador y la disponibilidad.",
-      en: "For a charter, usually yes. For tours it depends on the operator's rules and availability.",
+      es: "No en este lanzamiento. No inventamos inventario para toda la flota: la confirmacion es operativa, en 24 horas.",
+      en: "Not in this launch. We are not inventing inventory for the whole fleet: confirmation is operational, within 24 hours.",
     },
   },
   {
-    q: { es: "Que pasa si cambia el clima?", en: "What if the weather changes?" },
+    q: { es: "Ferry y tours estan a la venta?", en: "Are ferry and tours on sale?" },
     a: {
-      es: "Si no es seguro, reprogramamos o cambiamos a un anclaje protegido.",
-      en: "If it's not safe, we reschedule or move to a protected anchorage.",
+      es: "Todavia no. Esos productos estan como Proximamente. Lo que esta vivo hoy es charter privado.",
+      en: "Not yet. Those products are Coming soon. What is live today is private charter.",
     },
   },
 ];

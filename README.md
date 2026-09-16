@@ -1,81 +1,113 @@
 # Atlante del Pacifico
 
-Independent booking & marketing web app for Atlante del Pacifico — private tours and
-yacht charters from Panama City, Taboga and Las Perlas.
+Independent booking and marketing web app for **Atlante del Pacifico** —
+private yacht charters from Panama City, Taboga and Las Perlas.
+
+Fully independent brand. There is no Pacific Experience co-brand, “by Pacific
+Experience”, or “Operado por…” copy on the site.
 
 Built as a **Next.js 16 (App Router, TypeScript) + Tailwind v4** full-stack app,
-deployable on **Vercel**. Booking/payment patterns reference the `catamaran-rentals-prod`
-app but this is a fully separate codebase.
+deployable on **Vercel**.
 
 ## Run locally
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # production build
+cp .env.example .env   # fill DATABASE_URL + PagueloFácil when testing checkout
+npm run dev            # http://localhost:3000
+npm run build          # production build
 ```
 
-Phase 1 (the marketing site) needs **no** environment variables. Phase 2 features
-each require an account — see `.env.example`.
+The marketing site and charter fichas render without env vars. Creating a
+PagueloFácil deposit link requires `DATABASE_URL` plus the PF secrets below.
+
+## Charter MVP (Route A)
+
+Live product: **private charters**. Ferry and tours stay “Próximamente”.
+
+| Route | What it is |
+| --- | --- |
+| `/` | Hero with Charters live; Ferry / Tours próximamente |
+| `/charters` | Fleet grid — Pacific Ferry + Sirena del Mar live; other boats placeholder |
+| `/charters/pacific-ferry` | Ficha + request form |
+| `/charters/sirena-del-mar` | Ficha + request form |
+| `/reservar/[slug]` | Same short form (name, WhatsApp, date, hours, pax) |
+| `/reservar/[slug]/gracias` | Post-request / post-deposit |
+
+**UX lock:** request + 24h operator confirmation + 30% deposit. No live calendars
+for the fleet. Aura is excluded. Placeholder boats have no invented prices.
+
+**Disclaimer (locked ES):** the deposit confirms the *request*, not the
+reservation. Availability is checked with the vessel operator within 24 hours
+via WhatsApp. Alternative date/boat, or 100% refund.
+
+**Prices:** sample 4h totals in `src/data/charters.ts` are tagged `TODO_MARK`
+(cited “desde” $1,300 — not official 8h/12h tariffs). Replace before treating
+them as operator rates. 8h and 12h stay `null` until filled (form still accepts
+the request; no PagueloFácil charge).
+
+## PagueloFácil (not static button links)
+
+Checkout follows the PEX `catamaran-rentals` Enlace de Pago pattern:
+
+1. `POST /api/charters/reservar` stores the lead, then server-creates a
+   single-use LinkDeamon URL (`CCLW`, `CMTN`, `CDSC`, hex `RETURN_URL`,
+   `PARM_1` = lead id, `EXPIRES_IN=900`).
+2. Browser redirects to that hosted URL.
+3. PF hits `GET /api/payments/paguelofacil/return` and/or
+   `POST /api/payments/paguelofacil/webhook` with `Oper` — **hints only**.
+4. Atlante confirms via MerchantTransactions S2S. Authorization is the **raw
+   API token** (do not prefix `Bearer `). Status whitelist includes numeric `1`.
+   Amount must match the stored 30% deposit; `PARM_1` must match the lead id.
+
+Client: `src/lib/paguelofacil.ts`.
+
+**TODO:** keep that client aligned with
+`catamaran-rentals/backend/src/modules/payments/payments.service.ts` when
+porting remaining PEX behavior (reconciliation cron, expired-recovery mark-paid).
+
+### Env (Vercel → Project → Environment Variables)
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Postgres (pooled). Required to persist leads and reconcile payments. |
+| `DIRECT_URL` | Direct Postgres URL for `prisma db push` / migrate. |
+| `PUBLIC_APP_URL` | Public origin, e.g. `https://www.atlantedelpacifico.lat` |
+| `PAGUELOFACIL_CCLW` | Merchant web code |
+| `PAGUELOFACIL_API_TOKEN` | MerchantTransactions token (raw Authorization) |
+| `PAGUELOFACIL_API_URL` | Default `https://secure.paguelofacil.com/LinkDeamon.cfm` |
+| `PAGUELOFACIL_VERIFY_URL` | Default `https://admin.paguelofacil.com` |
+| `PAGUELOFACIL_RETURN_URL` | Optional override of `${PUBLIC_APP_URL}/api/payments/paguelofacil/return` |
+
+Webhook URL (dashboard Notificaciones, no env var):
+`https://www.atlantedelpacifico.lat/api/payments/paguelofacil/webhook`
+
+Without PF or DB, the form still works: lead is logged, customer lands on
+`/gracias?pago=pendiente`, follow-up is WhatsApp (+507 6860 3623).
+
+Schema apply when the database exists: `npx prisma db push` or
+`psql "$DATABASE_URL" -f prisma/charter-requests.sql`.
 
 ## Architecture
 
 ```
 src/
-  app/                 App Router pages
-    page.tsx           Home (all sections)
-    tours/[slug]/      Tour & charter detail pages (SEO + JSON-LD)
-    compare/           Side-by-side compare
-    api/lead/          Email-capture endpoint (stub -> Phase 2)
-    sitemap.ts robots.ts
-  components/
-    site/              Header, Footer, floating WhatsApp
-    sections/          Home sections (hero, tours, charters, reviews, ...)
-    tour/              TourCard, TourDetail, RouteMap, WeatherWidget, PriceCalculator, Badges, CompareTable
-    marketing/         Analytics (GA4/Meta), LeadPopups (capture + exit-intent)
-  content/             tours.ts, reviews.ts  (bilingual data)
-  lib/                 i18n, locale + currency contexts, formatting/pricing
-  config/              site.ts (brand, WhatsApp, trust)
-prisma/schema.prisma   Phase 2 data model (bookings, payments, coupons, ...)
+  app/
+    (site)/charters/          Fleet + fichas
+    (site)/reservar/[slug]/   Request form + gracias
+    api/charters/reservar     Create lead + PagueloFácil link
+    api/payments/paguelofacil return / webhook / availability
+  components/charter/         Cards, ficha, form, deposit disclaimer
+  data/charters.ts            Fleet source of truth (Aura omitted)
+  lib/paguelofacil.ts         LinkDeamon + S2S verify
+  lib/charter-requests.ts     Lead persist (lazy Prisma)
+prisma/schema.prisma          Includes CharterRequest
 ```
 
-Bilingual **ES/EN** everywhere (locale context + cookie for SSR + browser detection).
-Multi-currency **USD/EUR/COP/MXN** with reference rates in `lib/format.ts`.
-
-## Feature status vs. the 50-item plan
-
-### Done (Phase 1 — no external accounts)
-Tour landing pages (gallery, itinerary, included/excluded, per-tour FAQ, difficulty
-badges) · interactive route map (OpenStreetMap) · live weather (Open-Meteo) · compare
-tours · reviews/social-proof + JSON-LD aggregate rating · trust indicators · urgency
-pills · group-size price calculator with deposit · multi-currency · bilingual ES/EN +
-auto-detect · SEO + Open Graph per page · sitemap/robots · email-capture + exit-intent
-popups · floating WhatsApp + pre-filled messages · GA4/Meta Pixel loaders (inert until IDs set).
-
-### To wire (Phase 2 — needs your accounts, schema is ready)
-No online payment gateway — bookings are closed over WhatsApp and marked paid
-manually (cash / bank transfer). Remaining: real availability calendar · admin
-dashboard (create/block dates, mark paid, view revenue) · booking request +
-confirmation emails · QR boarding tickets · automated email sequences (Resend) ·
-SMS/WhatsApp reminders (Twilio) · digital waivers · coupon redemption (schema in
-place; client codes today) · gift cards · referral/affiliate portal · loyalty ·
-auto-collected post-trip reviews · weather rebooking flow · Google Calendar sync.
-
-## Phase 2 setup (when ready)
-
-1. Create a Postgres DB (Neon or Supabase) → set `DATABASE_URL` + `DIRECT_URL`.
-2. `npx prisma migrate dev --name init` then `npm run db:seed`.
-3. Resend (email) and Twilio (SMS/WhatsApp) → set their keys.
-4. Set the same vars in Vercel → Project → Settings → Environment Variables.
+Bilingual **ES/EN**. Multi-currency **USD/EUR/COP/MXN** (display only; PF charges USD).
 
 ## Deploy (Vercel)
 
-Push to GitHub (`origin` is already set). In Vercel, "Import Project" from the
-`atlante` repo — it auto-detects Next.js. No config needed for Phase 1.
-
-## Notes
-
-- Only `og-atlante.jpg` and `logo.png` ship as real imagery; galleries reuse the hero
-  as a placeholder. Drop real trip photos into `public/` and update `gallery`/`heroImage`
-  in `content/tours.ts`.
-- WhatsApp number, brand and trust numbers live in `src/config/site.ts`.
+Import the `atlante` repo. Set the env vars above for production and preview
+if you want live PagueloFácil. Preview without secrets still shows the charter
+UX; checkout degrades to WhatsApp follow-up.

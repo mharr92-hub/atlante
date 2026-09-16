@@ -1,6 +1,6 @@
 import Hero from "@/components/sections/Hero";
 import ValueProps from "@/components/sections/ValueProps";
-import ToursSection from "@/components/sections/ToursSection";
+import ComingSoonProducts from "@/components/sections/ComingSoonProducts";
 import ChartersSection from "@/components/sections/ChartersSection";
 import Destinations from "@/components/sections/Destinations";
 import About from "@/components/sections/About";
@@ -40,8 +40,8 @@ export default function Home() {
       />
       <Hero />
       <ValueProps />
-      <ToursSection />
       <ChartersSection />
+      <ComingSoonProducts />
       <Destinations />
       <About />
       <ReviewsSection />

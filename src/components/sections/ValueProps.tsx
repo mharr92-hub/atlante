@@ -5,27 +5,27 @@ import { L } from "@/lib/i18n";
 
 const items = [
   {
-    fact: { es: "Tours con operador aliado", en: "Tours with partner operators" },
-    h: { es: "Curado.", en: "Curated." },
-    p: {
-      es: "Filtramos rutas, tiempos y estilo de experiencia para que no tengas que comparar a ciegas.",
-      en: "We filter routes, timing and experience style so you don't have to compare blindly.",
-    },
-  },
-  {
-    fact: { es: "Yate completo para tu grupo", en: "Whole yacht for your group" },
+    fact: { es: "Barco completo para tu grupo", en: "Whole boat for your group" },
     h: { es: "Privado.", en: "Private." },
     p: {
-      es: "Cuando quieres control total, armamos una propuesta de charter completo con ruta y horario a medida.",
-      en: "When you want full control, we build a whole-charter proposal with a custom route and schedule.",
+      es: "Pacific Ferry y Sirena del Mar se alquilan completos. Tu grupo elige fecha, horas y ritmo.",
+      en: "Pacific Ferry and Sirena del Mar are chartered whole. Your group picks date, hours and pace.",
     },
   },
   {
-    fact: { es: "Concierge desde el primer mensaje", en: "Concierge from the first message" },
-    h: { es: "Sin esfuerzo.", en: "Effortless." },
+    fact: { es: "Solicitud con abono 30%", en: "Request with 30% deposit" },
+    h: { es: "Claro.", en: "Clear." },
     p: {
-      es: "Nos cuentas fecha, grupo y plan ideal. Te respondemos con opciones concretas y el siguiente paso.",
-      en: "Tell us the date, group and ideal plan. We reply with concrete options and the next step.",
+      es: "El abono confirma la solicitud, no la reserva. Validamos disponibilidad en un máximo de 24 horas.",
+      en: "The deposit confirms the request, not the reservation. We validate availability within 24 hours.",
+    },
+  },
+  {
+    fact: { es: "Concierge por WhatsApp", en: "Concierge on WhatsApp" },
+    h: { es: "Cerca.", en: "Close." },
+    p: {
+      es: "Te confirmamos por WhatsApp. Si la fecha no sirve, alternativa o devolución del 100% del abono.",
+      en: "We confirm on WhatsApp. If the date does not work, an alternative or a 100% deposit refund.",
     },
   },
 ];

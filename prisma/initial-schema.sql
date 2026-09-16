@@ -8,13 +8,16 @@ CREATE TYPE "BookingStatus" AS ENUM ('pending', 'confirmed', 'cancelled', 'expir
 CREATE TYPE "PaymentStatus" AS ENUM ('unpaid', 'paid', 'refunded');
 
 -- CreateEnum
-CREATE TYPE "BookingFlow" AS ENUM ('whatsapp_request', 'manual_payment', 'charter_request');
+CREATE TYPE "BookingFlow" AS ENUM ('whatsapp_request', 'manual_payment', 'charter_request', 'paguelofacil_checkout');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'transfer', 'manual', 'refund');
+CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'transfer', 'manual', 'refund', 'paguelofacil');
 
 -- CreateEnum
 CREATE TYPE "SlotStatus" AS ENUM ('available', 'full', 'blocked', 'maintenance');
+
+-- CreateEnum
+CREATE TYPE "CharterConfirmation" AS ENUM ('awaiting', 'confirmed', 'declined');
 
 -- CreateTable
 CREATE TABLE "AvailabilitySlot" (
@@ -100,6 +103,33 @@ CREATE TABLE "Payment" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CharterRequest" (
+    "id" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "durationId" TEXT NOT NULL,
+    "hours" INTEGER NOT NULL,
+    "bookingDate" DATE NOT NULL,
+    "guestCount" INTEGER NOT NULL,
+    "customerName" TEXT NOT NULL,
+    "customerWhatsapp" TEXT NOT NULL,
+    "sampleTotalUsd" DECIMAL(10,2),
+    "depositAmount" DECIMAL(10,2) NOT NULL,
+    "depositPercent" INTEGER NOT NULL DEFAULT 30,
+    "status" "BookingStatus" NOT NULL DEFAULT 'pending',
+    "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'unpaid',
+    "charterConfirmation" "CharterConfirmation" NOT NULL DEFAULT 'awaiting',
+    "confirmationToken" TEXT NOT NULL,
+    "paguelofacilLinkCode" TEXT,
+    "paguelofacilOperationId" TEXT,
+    "paymentRef" TEXT,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "CharterRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -195,6 +225,15 @@ CREATE INDEX "Booking_bookingDate_idx" ON "Booking"("bookingDate");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_providerRef_key" ON "Payment"("providerRef");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CharterRequest_confirmationToken_key" ON "CharterRequest"("confirmationToken");
+
+-- CreateIndex
+CREATE INDEX "CharterRequest_slug_bookingDate_idx" ON "CharterRequest"("slug", "bookingDate");
+
+-- CreateIndex
+CREATE INDEX "CharterRequest_paymentStatus_status_idx" ON "CharterRequest"("paymentStatus", "status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Lead_email_key" ON "Lead"("email");

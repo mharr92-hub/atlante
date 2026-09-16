@@ -8,7 +8,7 @@ import Providers from "@/components/Providers";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} | Tours y charters privados en Panama`,
+    default: `${site.name} | Charters privados en Panama`,
     template: `%s | ${site.name}`,
   },
   description: site.description,
